@@ -1,0 +1,152 @@
+{
+  "site": {
+    "name": "Portal Berita",
+    "baseUrl": "",
+    "defaultOgImage": "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1200&q=70"
+  },
+  "categories": [
+    {
+      "key": "berita-utama",
+      "label": "BERITA UTAMA"
+    },
+    {
+      "key": "ekonomi-bisnis",
+      "label": "EKONOMI & BISNIS"
+    },
+    {
+      "key": "internasional",
+      "label": "INTERNASIONAL"
+    },
+    {
+      "key": "nasional",
+      "label": "NASIONAL"
+    },
+    {
+      "key": "properti-infrastruktur",
+      "label": "PROPERTI DAN INFRASTRUKTUR"
+    }
+  ],
+  "others": [
+    {
+      "key": "teknologi",
+      "label": "TEKNOLOGI"
+    },
+    {
+      "key": "olahraga",
+      "label": "OLAHRAGA"
+    },
+    {
+      "key": "hiburan",
+      "label": "HIBURAN"
+    },
+    {
+      "key": "gaya-hidup",
+      "label": "GAYA HIDUP"
+    },
+    {
+      "key": "pendidikan",
+      "label": "PENDIDIKAN"
+    }
+  ],
+  "news": [
+    {
+      "id": 1,
+      "category": "LINGKUNGAN HIDUP",
+      "navKey": "berita-utama",
+      "tags": [
+        "lingkungan",
+        "konservasi",
+        "komunitas"
+      ],
+      "title": "Tanam 2000 Bibit Pohon, Komunitas Dorong Konservasi Berbasis Masyarakat",
+      "date": "21 Januari 2026",
+      "author": "Redaksi",
+      "image": "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=70",
+      "description": "Komunitas menanam 2000 bibit pohon untuk konservasi berbasis masyarakat, fokus pada resapan air, edukasi, dan pelibatan warga.",
+      "body": "Kegiatan penanaman pohon dilakukan di beberapa titik dan melibatkan warga setempat.\n\nPanitia menyebut tujuan utama adalah menjaga daerah resapan air, mengurangi risiko longsor, dan membangun kebiasaan merawat lingkungan.\n\nProgram lanjutan akan mencakup pemantauan pertumbuhan bibit, edukasi sekolah, dan pelibatan UMKM lokal."
+    },
+    {
+      "id": 2,
+      "category": "EKONOMI & BISNIS",
+      "navKey": "ekonomi-bisnis",
+      "tags": [
+        "ekonomi",
+        "pangan",
+        "umkm"
+      ],
+      "title": "Harga Pangan Stabil, Pedagang Catat Permintaan Naik Menjelang Akhir Bulan",
+      "date": "27 Januari 2026",
+      "author": "Ekbis",
+      "image": "https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1600&q=70",
+      "description": "Harga pangan relatif stabil, permintaan pasar naik, dan pedagang berharap distribusi tetap lancar hingga pekan depan.",
+      "body": "Sejumlah pasar tradisional mencatat permintaan naik dalam dua hari terakhir.\n\nPasokan dinilai aman dan distribusi lebih lancar. Pedagang berharap stabilitas terjaga hingga pekan depan.\n\nAnalis menilai harga yang stabil membantu UMKM makanan mengatur biaya produksi."
+    },
+    {
+      "id": 3,
+      "category": "TEKNOLOGI",
+      "navKey": "teknologi",
+      "tags": [
+        "ai",
+        "startup",
+        "umkm"
+      ],
+      "title": "Startup Lokal Rilis Asisten AI untuk UMKM, Fokus Chat Pelanggan",
+      "date": "25 Januari 2026",
+      "author": "Tech Desk",
+      "image": "https://images.unsplash.com/photo-1526378722484-bd91ca387e72?auto=format&fit=crop&w=1600&q=70",
+      "description": "Asisten AI membantu UMKM menyusun katalog otomatis, menjawab chat pelanggan, dan memberi rekomendasi upsell berbasis data.",
+      "body": "Produk ini menargetkan pemilik toko online untuk menyusun katalog otomatis dan menjawab pertanyaan pelanggan lebih cepat.\n\nFitur termasuk ringkasan produk, rekomendasi upsell, serta analisis pertanyaan yang paling sering muncul."
+    },
+    {
+      "id": 4,
+      "category": "NASIONAL",
+      "navKey": "nasional",
+      "tags": [
+        "pajak",
+        "umkm",
+        "regulasi"
+      ],
+      "title": "Kebijakan Baru Pajak UMKM, Ini Dampaknya untuk Pelaku Usaha",
+      "date": "27 Januari 2026",
+      "author": "Desk Nasional",
+      "image": "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1600&q=70",
+      "description": "Pembaruan aturan pajak UMKM diumumkan, pelaku usaha diminta menyesuaikan pelaporan dan memahami ketentuan tarif berbasis omzet.",
+      "body": "Pemerintah mengumumkan pembaruan aturan pajak UMKM.\n\nPelaku usaha diminta menyesuaikan pelaporan dan memperhatikan ketentuan tarif berdasarkan omzet.\n\nSosialisasi akan dilakukan bertahap di beberapa daerah."
+    },
+    {
+      "id": 5,
+      "category": "PROPERTI",
+      "navKey": "properti-infrastruktur",
+      "tags": [
+        "properti",
+        "infrastruktur",
+        "kota"
+      ],
+      "title": "Jalur Sepeda Terproteksi Diuji Coba di Ruas Utama, Warga Minta Rambu Tambahan",
+      "date": "24 Januari 2026",
+      "author": "Metro",
+      "image": "https://images.unsplash.com/photo-1520975708790-68b13df2f7f3?auto=format&fit=crop&w=1600&q=70",
+      "description": "Uji coba jalur sepeda terproteksi dinilai lebih aman, warga meminta rambu tambahan dan penegakan untuk kendaraan yang menerobos.",
+      "body": "Uji coba jalur sepeda terproteksi dilakukan di beberapa ruas utama.\n\nWarga mengapresiasi karena terasa lebih aman, namun meminta rambu tambahan dan penegakan untuk kendaraan yang menerobos.\n\nDinas terkait menyatakan evaluasi dilakukan tiap pekan."
+    }
+  ],
+  "trendingIds": [
+    3,
+    2,
+    1
+  ],
+  "commentsMock": [
+    {
+      "id": 2,
+      "title": "Komentar: Artikel ekonomi cukup informatif!",
+      "date": "Baru saja",
+      "image": "https://images.unsplash.com/photo-1520975682138-cbf7a3a9a4d1?auto=format&fit=crop&w=600&q=60"
+    },
+    {
+      "id": 3,
+      "title": "Komentar: Bahas AI-nya menarik.",
+      "date": "10 menit lalu",
+      "image": "https://images.unsplash.com/photo-1520975693410-001c3566f02f?auto=format&fit=crop&w=600&q=60"
+    }
+  ]
+}

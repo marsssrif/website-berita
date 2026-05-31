@@ -1,0 +1,146 @@
+[
+  {
+    "id": 1,
+    "title": "Tanam 2000 Bibit Pohon, Komunitas Dorong Konservasi Berbasis Masyarakat",
+    "excerpt": "Kegiatan penanaman pohon melibatkan warga setempat untuk menjaga daerah resapan dan menumbuhkan kebiasaan merawat lingkungan.",
+    "category": "LINGKUNGAN HIDUP",
+    "navKey": "berita-utama",
+    "tags": [
+      "lingkungan",
+      "konservasi",
+      "komunitas"
+    ],
+    "author": "Redaksi",
+    "date": "21 Januari 2026",
+    "image": "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=70",
+    "body": "Kegiatan penanaman pohon dilakukan di beberapa titik dan melibatkan warga setempat.\n\nPanitia menyebut tujuan utama adalah menjaga daerah resapan air, mengurangi risiko longsor, dan membangun kebiasaan merawat lingkungan.\n\nProgram lanjutan akan mencakup pemantauan pertumbuhan bibit, edukasi sekolah, dan pelibatan UMKM lokal."
+  },
+  {
+    "id": 2,
+    "title": "Harga Pangan Stabil, Pedagang Catat Permintaan Naik Menjelang Akhir Bulan",
+    "excerpt": "Permintaan naik di pasar tradisional, sementara pasokan dinilai aman dan distribusi lebih lancar menjelang akhir bulan.",
+    "category": "EKONOMI & BISNIS",
+    "navKey": "ekonomi-bisnis",
+    "tags": [
+      "ekonomi",
+      "pangan",
+      "umkm"
+    ],
+    "author": "Ekbis",
+    "date": "27 Januari 2026",
+    "image": "https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1600&q=70",
+    "body": "Sejumlah pasar tradisional mencatat permintaan naik dalam dua hari terakhir.\n\nPasokan dinilai aman dan distribusi lebih lancar. Pedagang berharap stabilitas terjaga hingga pekan depan.\n\nAnalis menilai harga yang stabil membantu UMKM makanan mengatur biaya produksi."
+  },
+  {
+    "id": 3,
+    "title": "Startup Lokal Rilis Asisten AI untuk UMKM, Fokus Chat Pelanggan",
+    "excerpt": "Asisten AI ini membantu UMKM menyusun katalog dan menjawab pertanyaan pelanggan lebih cepat dengan analitik sederhana.",
+    "category": "TEKNOLOGI",
+    "navKey": "teknologi",
+    "tags": [
+      "ai",
+      "startup",
+      "umkm"
+    ],
+    "author": "Tech Desk",
+    "date": "25 Januari 2026",
+    "image": "https://images.unsplash.com/photo-1526378722484-bd91ca387e72?auto=format&fit=crop&w=1600&q=70",
+    "body": "Produk ini menargetkan pemilik toko online untuk menyusun katalog otomatis dan menjawab pertanyaan pelanggan lebih cepat.\n\nFitur termasuk ringkasan produk, rekomendasi upsell, serta analisis pertanyaan yang paling sering muncul."
+  },
+  {
+    "id": 4,
+    "title": "Kebijakan Baru Pajak UMKM, Ini Dampaknya untuk Pelaku Usaha",
+    "excerpt": "Pembaruan aturan pajak UMKM menuntut penyesuaian pelaporan dan pemahaman ketentuan tarif berdasarkan omzet.",
+    "category": "NASIONAL",
+    "navKey": "nasional",
+    "tags": [
+      "pajak",
+      "umkm",
+      "regulasi"
+    ],
+    "author": "Desk Nasional",
+    "date": "27 Januari 2026",
+    "image": "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1600&q=70",
+    "body": "Pemerintah mengumumkan pembaruan aturan pajak UMKM.\n\nPelaku usaha diminta menyesuaikan pelaporan dan memperhatikan ketentuan tarif berdasarkan omzet.\n\nSosialisasi akan dilakukan bertahap di beberapa daerah."
+  },
+  {
+    "id": 5,
+    "title": "Jalur Sepeda Terproteksi Diuji Coba di Ruas Utama, Warga Minta Rambu Tambahan",
+    "excerpt": "Uji coba jalur sepeda terproteksi diapresiasi warga, namun diperlukan rambu tambahan dan penegakan untuk kendaraan yang menerobos.",
+    "category": "PROPERTI",
+    "navKey": "properti-infrastruktur",
+    "tags": [
+      "properti",
+      "infrastruktur",
+      "kota"
+    ],
+    "author": "Metro",
+    "date": "24 Januari 2026",
+    "image": "https://images.unsplash.com/photo-1520975708790-68b13df2f7f3?auto=format&fit=crop&w=1600&q=70",
+    "body": "Uji coba jalur sepeda terproteksi dilakukan di beberapa ruas utama.\n\nWarga mengapresiasi karena terasa lebih aman, namun meminta rambu tambahan dan penegakan untuk kendaraan yang menerobos.\n\nDinas terkait menyatakan evaluasi dilakukan tiap pekan."
+  },
+  {
+    "id": 6,
+    "title": "Film Drama Keluarga Dominasi Box Office, Kritikus Puji Akting Pemeran Utama",
+    "excerpt": "Film drama keluarga memikat penonton, sementara kritikus menyoroti akting pemeran utama yang natural dan emosional.",
+    "category": "HIBURAN",
+    "navKey": "hiburan",
+    "tags": [
+      "film",
+      "hiburan",
+      "box-office"
+    ],
+    "author": "Pop Culture",
+    "date": "24 Januari 2026",
+    "image": "https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?auto=format&fit=crop&w=1600&q=70",
+    "body": "Film drama keluarga memikat penonton lewat konflik yang dekat dengan keseharian.\n\nKritikus menyoroti akting pemeran utama yang mampu menjaga emosi tetap natural.\n\nProduser menyebut strategi rilis memanfaatkan word-of-mouth."
+  },
+  {
+    "id": 7,
+    "title": "Timnas U-23 Raih Kemenangan Dramatis, Pelatih Soroti Disiplin Bertahan",
+    "excerpt": "Timnas U-23 menang dramatis. Pelatih meminta pemain memperbaiki transisi bertahan dan disiplin di area berbahaya.",
+    "category": "OLAHRAGA",
+    "navKey": "olahraga",
+    "tags": [
+      "sepakbola",
+      "timnas",
+      "olahraga"
+    ],
+    "author": "Desk Bola",
+    "date": "26 Januari 2026",
+    "image": "https://images.unsplash.com/photo-1521412644187-c49fa049e84d?auto=format&fit=crop&w=1600&q=70",
+    "body": "Laga berjalan ketat dengan intensitas tinggi sejak menit awal.\n\nPelatih mengingatkan pemain agar lebih rapat saat transisi bertahan dan meminimalkan pelanggaran di area berbahaya."
+  },
+  {
+    "id": 8,
+    "title": "Universitas Umumkan Beasiswa Riset Iklim, Targetkan Kolaborasi Lintas Disiplin",
+    "excerpt": "Beasiswa riset iklim dibuka untuk mahasiswa dan dosen dengan fokus kolaborasi lintas disiplin dan isu ketahanan pangan.",
+    "category": "PENDIDIKAN",
+    "navKey": "pendidikan",
+    "tags": [
+      "beasiswa",
+      "riset",
+      "iklim"
+    ],
+    "author": "Kampus",
+    "date": "23 Januari 2026",
+    "image": "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1600&q=70",
+    "body": "Skema beasiswa riset iklim dibuka untuk mahasiswa dan dosen.\n\nFokus riset termasuk ketahanan pangan, pengelolaan air, dan peringatan dini bencana."
+  },
+  {
+    "id": 9,
+    "title": "Festival Kuliner Digelar Akhir Pekan, UMKM Catat Transaksi Meningkat",
+    "excerpt": "Festival kuliner menghadirkan ratusan tenant. UMKM melaporkan transaksi meningkat terutama saat jam makan siang dan akhir pekan.",
+    "category": "GAYA HIDUP",
+    "navKey": "gaya-hidup",
+    "tags": [
+      "kuliner",
+      "umkm",
+      "festival"
+    ],
+    "author": "Lifestyle",
+    "date": "22 Januari 2026",
+    "image": "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1600&q=70",
+    "body": "Festival kuliner menampilkan ratusan tenant dari berbagai daerah.\n\nUMKM melaporkan peningkatan transaksi, terutama pada jam makan siang dan akhir pekan.\n\nPanitia menambah sistem pembayaran digital dan area tempat duduk."
+  }
+]

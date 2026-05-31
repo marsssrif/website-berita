@@ -1,0 +1,15 @@
+# Dependency directories
+node_modules/
+server/node_modules/
+
+# Environment files (Sangat Penting! Berisi kredensial email/JWT)
+.env
+server/.env
+
+# Local databases
+*.sqlite
+server/data.sqlite
+
+# System files
+.DS_Store
+Thumbs.db

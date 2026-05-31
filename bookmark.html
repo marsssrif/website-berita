@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Berita Tersimpan — Berita Krian</title>
+  <meta name="description" content="Daftar berita yang Anda simpan di Berita Krian." />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar__inner">
+      <div class="topbar__left">
+        <span class="topbar__date" id="topbarDate"></span>
+        <span class="topbar__clock" id="topbarTime"></span>
+        <span class="topbar__sep"></span>
+        <a class="topbar__btn" href="#">✉ Kirim Press Release</a>
+        <a class="topbar__btn" href="#">☎ Hubungi Kami</a>
+      </div>
+      <div class="topbar__right">
+        <a class="topbar__link" href="./bookmark.html">🔖 Tersimpan <span class="bk-badge" id="bkBadge"></span></a>
+        <span class="topbar__sep"></span>
+        <a class="topbar__link" href="./admin.html">⚙ Admin</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breaking News Ticker -->
+  <div class="ticker" id="breakingTicker">
+    <div class="ticker__label">
+      <span class="ticker__dot"></span>
+      BREAKING
+    </div>
+    <div class="ticker__track" id="tickerTrack"></div>
+  </div>
+
+  <header class="brand">
+    <div class="container brand__inner">
+      <a class="brand__logo" href="./index.html" aria-label="Berita Krian - Beranda">
+        <div class="logoMark">BK</div>
+        <div class="logoText">
+          <div style="display:flex;gap:6px;align-items:baseline">
+            <div class="logoText__big">BERITA</div>
+            <div class="logoText__big red">KRIAN</div>
+          </div>
+          <div class="logoText__sub">Portal Berita Krian</div>
+        </div>
+      </a>
+      <div class="brand__search" role="search">
+        <span class="brand__search-icon">🔍</span>
+        <input type="search" placeholder="Cari berita..." id="headerSearch" autocomplete="off" />
+      </div>
+    </div>
+  </header>
+
+  <nav class="nav">
+    <div class="container nav__inner" id="navCats"></div>
+  </nav>
+
+  <main class="container main" style="grid-template-columns:1fr; padding:16px">
+    <section class="section">
+      <div class="section__head">
+        <h1 style="margin:0;font-size:18px">🔖 Berita Tersimpan</h1>
+        <div class="section__tools">
+          <button class="pageBtn" id="clearAllBtn" type="button" style="color:#e11d2e;border-color:rgba(225,29,46,.35)">🗑 Hapus Semua</button>
+        </div>
+      </div>
+      <div class="newsList" id="bookmarkList"></div>
+      <div id="emptyState" class="emptyBookmark" style="display:none">
+        <div class="emptyBookmark__icon">🔖</div>
+        <h2>Belum ada berita tersimpan</h2>
+        <p>Klik tombol <strong>Simpan</strong> pada berita yang Anda suka untuk menyimpannya di sini.</p>
+        <a class="loadMoreBtn" href="./index.html" style="display:inline-flex;margin-top:12px;text-decoration:none">← Kembali ke Beranda</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div>© <span id="year"></span> Berita Krian</div>
+      <div class="muted">Berita Tersimpan • LocalStorage</div>
+    </div>
+  </footer>
+
+  <script src="./data.js"></script>
+  <script src="./utils.js"></script>
+  <script src="./store.js"></script>
+  <script src="./features.js"></script>
+  <script src="./bookmark.js" defer></script>
+</body>
+</html>

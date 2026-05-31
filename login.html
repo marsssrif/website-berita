@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login Admin — Berita Krian</title>
+  <meta name="description" content="Login admin portal berita Berita Krian." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    body { background: #0f172a; min-height: 100vh; display: flex; flex-direction: column; }
+    .login-page {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(220,38,38,.18) 0%, transparent 65%),
+        #0f172a;
+    }
+    .loginCard {
+      background: rgba(255,255,255,.04);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 20px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.05);
+      width: 100%;
+      max-width: 420px;
+      overflow: hidden;
+    }
+    .loginTop {
+      padding: 32px 32px 24px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      text-align: center;
+    }
+    .loginLogo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .loginLogoMark {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      font-size: 16px;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(220,38,38,.4);
+    }
+    .loginLogoText { font-size: 22px; font-weight: 900; color: #fff; letter-spacing: 1px; }
+    .loginLogoText span { color: #dc2626; }
+    .loginTitle { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+    .loginSubtitle { font-size: 13px; color: rgba(255,255,255,.45); font-weight: 400; line-height: 1.5; }
+    .loginBody { padding: 28px 32px 32px; }
+    .login-field { display: grid; gap: 6px; margin-bottom: 16px; }
+    .login-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.5);
+    }
+    .login-input {
+      width: 100%;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s, background .2s, box-shadow .2s;
+    }
+    .login-input::placeholder { color: rgba(255,255,255,.25); }
+    .login-input:focus {
+      border-color: #dc2626;
+      background: rgba(255,255,255,.1);
+      box-shadow: 0 0 0 3px rgba(220,38,38,.15);
+    }
+    .loginBtn {
+      width: 100%;
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 13px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .2s, transform .2s, box-shadow .2s;
+      margin-top: 4px;
+      letter-spacing: .3px;
+      box-shadow: 0 4px 16px rgba(220,38,38,.35);
+    }
+    .loginBtn:hover { opacity: .92; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(220,38,38,.4); }
+    .loginBtn:active { transform: translateY(0); }
+    .loginBtn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .loginBack {
+      display: block;
+      text-align: center;
+      margin-top: 14px;
+      font-size: 13px;
+      color: rgba(255,255,255,.35);
+      transition: color .2s;
+    }
+    .loginBack:hover { color: rgba(255,255,255,.7); }
+    .loginMsg {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
+    }
+    .loginMsg.error   { background: rgba(220,38,38,.15); border: 1px solid rgba(220,38,38,.3); color: #fca5a5; display: block; }
+    .loginMsg.success { background: rgba(5,150,105,.15);  border: 1px solid rgba(5,150,105,.3);  color: #6ee7b7; display: block; }
+    .loginHints {
+      margin-top: 20px;
+      padding: 14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 10px;
+    }
+    .loginHints h4 {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,.4);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .hintRow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+    }
+    .hintRow:last-child { border-bottom: 0; }
+    .hintUser { font-size: 13px; color: rgba(255,255,255,.75); font-weight: 600; }
+    .hintPass { font-size: 12px; color: rgba(255,255,255,.4); font-family: monospace; }
+    .hintRole { font-size: 11px; padding: 2px 7px; border-radius: 999px; font-weight: 700; }
+    .hintRole.admin  { background: rgba(220,38,38,.2);  color: #fca5a5; }
+    .hintRole.editor { background: rgba(37,99,235,.2);  color: #93c5fd; }
+    .hintRole.viewer { background: rgba(5,150,105,.2);  color: #6ee7b7; }
+  </style>
+  <script src="./config.js"></script>
+  <script src="./auth.js"></script>
+  <script src="./apiClient.js"></script>
+</head>
+<body>
+
+  <div class="login-page">
+    <div class="loginCard">
+      <!-- Top -->
+      <div class="loginTop">
+        <div class="loginLogo">
+          <div class="loginLogoMark">BK</div>
+          <div class="loginLogoText">BERITA <span>KRIAN</span></div>
+        </div>
+        <div class="loginTitle">Masuk ke Admin</div>
+        <div class="loginSubtitle">Masukkan kredensial Anda untuk mengakses dashboard</div>
+      </div>
+
+      <!-- Form -->
+      <div class="loginBody">
+        <form id="loginForm" novalidate>
+          <div class="login-field">
+            <label class="login-label" for="username">Username</label>
+            <input class="login-input" id="username" type="text" placeholder="Masukkan username..."
+              autocomplete="username" required />
+          </div>
+          <div class="login-field">
+            <label class="login-label" for="password">Password</label>
+            <input class="login-input" id="password" type="password" placeholder="Masukkan password..."
+              autocomplete="current-password" required />
+          </div>
+
+          <div class="loginMsg" id="loginMsg"></div>
+
+          <button class="loginBtn" id="loginBtn" type="submit">Masuk →</button>
+          <a class="loginBack" href="./index.html">← Kembali ke Portal</a>
+        </form>
+
+        <!-- Hints -->
+        <div class="loginHints">
+          <h4>Akun Default</h4>
+          <div class="hintRow">
+            <div>
+              <div class="hintUser">admin</div>
+              <div class="hintPass">admin123</div>
+            </div>
+            <span class="hintRole admin">Admin</span>
+          </div>
+          <div class="hintRow">
+            <div>
+              <div class="hintUser">editor</div>
+              <div class="hintPass">editor123</div>
+            </div>
+            <span class="hintRole editor">Editor</span>
+          </div>
+          <div class="hintRow">
+            <div>
+              <div class="hintUser">viewer</div>
+              <div class="hintPass">viewer123</div>
+            </div>
+            <span class="hintRole viewer">Viewer</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const cfg  = window.SITE_CONFIG || {};
+      const useBackend = cfg.USE_BACKEND_AUTH === true;
+      const next = new URL(location.href).searchParams.get("next") || "admin.html";
+      const msg  = document.querySelector("#loginMsg");
+      const btn  = document.querySelector("#loginBtn");
+      const form = document.querySelector("#loginForm");
+
+      function setMsg(text, type){
+        msg.textContent = text || "";
+        msg.className = "loginMsg " + (type || "");
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        setMsg("", "");
+        btn.disabled = true;
+        btn.textContent = "Memproses...";
+
+        const u = document.querySelector("#username").value.trim();
+        const p = document.querySelector("#password").value;
+
+        if(!u || !p){
+          setMsg("Username dan password tidak boleh kosong.", "error");
+          btn.disabled = false;
+          btn.textContent = "Masuk →";
+          return;
+        }
+
+        try{
+          if(useBackend){
+            if(!window.ApiClient) throw new Error("ApiClient belum terload.");
+            await window.ApiClient.login(u, p);
+          } else {
+            if(!window.Auth) throw new Error("Auth belum terload.");
+            const res = window.Auth.login(u, p);
+            if(!res.ok) throw new Error(res.message || "Login gagal");
+          }
+          setMsg("Login berhasil! Mengalihkan...", "success");
+          setTimeout(() => { location.href = "./" + next; }, 600);
+        } catch(err){
+          const m = (err && err.message) ? err.message : "Login gagal";
+          if(m.toLowerCase().includes("failed to fetch")){
+            setMsg("Tidak dapat terhubung ke server. Pastikan backend berjalan.", "error");
+          } else {
+            setMsg(m, "error");
+          }
+          btn.disabled = false;
+          btn.textContent = "Masuk →";
+        }
+      });
+
+      // Enter key shortcut
+      document.querySelector("#username").addEventListener("keydown", e => {
+        if(e.key === "Enter") document.querySelector("#password").focus();
+      });
+    })();
+  </script>
+</body>
+</html>

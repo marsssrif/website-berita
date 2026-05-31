@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin — Berita Krian</title>
+  <meta name="description" content="Dashboard admin untuk kelola berita." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    /* ════════════════════════════
+       ADMIN SPECIFIC STYLES
+    ════════════════════════════ */
+
+    /* ── Topbar override ── */
+    .logoutBtn {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid rgba(220,38,38,.5); color: #fca5a5;
+      background: rgba(220,38,38,.15); padding: 5px 12px;
+      border-radius: 6px; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: background .18s, color .18s;
+      font-family: var(--sans);
+    }
+    .logoutBtn:hover { background: rgba(220,38,38,.28); color: #fff; }
+    .userPill {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+      padding: 5px 12px; border-radius: 999px; font-size: 12px; color: #94a3b8;
+    }
+    .userPill-dot { width: 7px; height: 7px; border-radius: 50%; background: #10b981; flex-shrink:0; }
+
+    /* ── Page layout ── */
+    .adminPage { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
+
+    /* ── Stat cards ── */
+    .statGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+    @media(max-width:900px){ .statGrid{ grid-template-columns: repeat(3,1fr); } }
+    @media(max-width:600px){ .statGrid{ grid-template-columns: repeat(2,1fr); } }
+    .statGrid--6 { grid-template-columns: repeat(3, 1fr); }
+    .statCard {
+      background: #fff; border: 1px solid var(--line); border-radius: 16px;
+      padding: 18px 20px; box-shadow: var(--shadow-sm);
+      display: flex; align-items: center; gap: 14px;
+      transition: box-shadow .18s, transform .18s;
+    }
+    .statCard:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+    .statCard__icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: grid; place-items: center; font-size: 20px; flex-shrink: 0;
+    }
+    .statCard__icon.red   { background: #fff5f5; }
+    .statCard__icon.blue  { background: #eff6ff; }
+    .statCard__icon.green { background: #f0fdf4; }
+    .statCard__icon.amber { background: #fffbeb; }
+    .statCard__num  { font-size: 26px; font-weight: 900; color: var(--text); line-height: 1; }
+    .statCard__label{ font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 3px; }
+
+    /* ── Panel ── */
+    .adminPanel {
+      background: #fff; border: 1px solid var(--line);
+      border-radius: 18px; box-shadow: var(--shadow); overflow: hidden;
+    }
+    .adminPanel__head {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 18px 22px; border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #fafbfd 0%, #fff 100%);
+      gap: 12px; flex-wrap: wrap;
+    }
+    .adminPanel__title {
+      font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px;
+    }
+    .adminPanel__title::before {
+      content: ''; display: inline-block; width: 3px; height: 16px;
+      background: var(--accent); border-radius: 2px;
+    }
+    .adminPanel__tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+    /* ── New button ── */
+    .btnNew {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; border: none; padding: 10px 20px;
+      border-radius: 999px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: var(--sans);
+      transition: opacity .18s, transform .18s, box-shadow .18s;
+      box-shadow: 0 4px 14px rgba(220,38,38,.35);
+      white-space: nowrap;
+    }
+    .btnNew:hover { opacity: .92; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(220,38,38,.4); }
+
+    /* ── Table ── */
+    .adminTable { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .adminTable th {
+      padding: 11px 14px; text-align: left; font-size: 10.5px;
+      font-weight: 800; letter-spacing: .8px; text-transform: uppercase;
+      color: var(--muted); background: #f8fafc; border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+    .adminTable td { padding: 14px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    .adminTable tbody tr:last-child td { border-bottom: 0; }
+    .adminTable tbody tr { transition: background .12s; }
+    .adminTable tbody tr:hover td { background: #f8fafc; }
+
+    .rowTitle    { font-weight: 700; font-size: 13px; color: var(--text); line-height: 1.35; }
+    .rowSlug     { font-size: 10.5px; color: var(--muted); margin-top: 3px; font-family: monospace; }
+
+    /* ── Inline action buttons ── */
+    .actBtns { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; }
+    .actBtn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 11px; border-radius: 8px; font-size: 12px; font-weight: 600;
+      border: 1px solid var(--line); background: #fff; cursor: pointer;
+      font-family: var(--sans); color: var(--text); white-space: nowrap;
+      transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
+    }
+    .actBtn:hover     { background: #f8fafc; box-shadow: var(--shadow-sm); }
+    .actBtn.edit:hover{ background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; }
+    .actBtn.prev:hover{ background: #f0fdf4; border-color: #86efac; color: #15803d; }
+    .actBtn.del  {
+      padding: 6px 9px; color: var(--muted);
+      border-color: transparent; background: transparent;
+    }
+    .actBtn.del:hover { background: #fff5f5; border-color: rgba(220,38,38,.3); color: var(--accent); box-shadow: none; }
+
+    /* ── Footer tools ── */
+    .adminFootTools {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
+      padding: 14px 22px; border-top: 1px solid var(--line); background: #fafbfd;
+    }
+    .adminFootHint { font-size: 12px; color: var(--muted); font-weight: 500; }
+
+    /* ══════════════════════════════
+       FORM MODAL
+    ══════════════════════════════ */
+    .formOverlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(15,23,42,.6); backdrop-filter: blur(6px);
+      z-index: 400;
+    }
+    .formOverlay.open { display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeOv .2s ease; }
+    @keyframes fadeOv { from { opacity:0; } to { opacity:1; } }
+
+    .formModal {
+      background: #fff; border-radius: 22px;
+      box-shadow: 0 40px 100px rgba(0,0,0,.3), 0 0 0 1px rgba(0,0,0,.04);
+      width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto;
+      animation: slideM .26s cubic-bezier(.22,1,.36,1);
+    }
+    @keyframes slideM {
+      from { opacity:0; transform:translateY(28px) scale(.97); }
+      to   { opacity:1; transform:translateY(0) scale(1); }
+    }
+    .formModal__head {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 20px 24px 18px; border-bottom: 1px solid var(--line);
+      position: sticky; top: 0; background: #fff; z-index: 2;
+      border-radius: 22px 22px 0 0;
+    }
+    .formModal__headLeft { display: flex; align-items: center; gap: 10px; }
+    .formModal__badge {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: grid; place-items: center; font-size: 15px; flex-shrink: 0;
+    }
+    .formModal__head h2 { margin: 0; font-size: 15px; font-weight: 800; }
+    .formModal__sub { font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 1px; }
+    .formModal__headRight { display: flex; gap: 8px; align-items: center; }
+    .fmClose {
+      width: 34px; height: 34px; border-radius: 9px;
+      border: 1px solid var(--line); background: #fff; font-size: 16px;
+      cursor: pointer; display: grid; place-items: center; color: var(--muted);
+      transition: background .15s, color .15s, border-color .15s; font-family: var(--sans);
+    }
+    .fmClose:hover { background: #fff5f5; color: var(--accent); border-color: rgba(220,38,38,.3); }
+    .formModal__body { padding: 22px 24px 24px; }
+
+    /* ── Form field improvements ── */
+    .fRow2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media(max-width:500px){ .fRow2{ grid-template-columns:1fr; } }
+    .fLabel {
+      font-size: 11px; font-weight: 700; letter-spacing: .5px;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 6px; display: block;
+    }
+    .fLabel span { color: var(--accent); }
+    .fInput {
+      width: 100%; border: 1px solid var(--line); border-radius: 10px;
+      padding: 10px 13px; font-family: var(--sans); font-size: 13.5px;
+      outline: none; background: #fafbfd; color: var(--text);
+      transition: border-color .18s, box-shadow .18s, background .18s;
+    }
+    .fInput:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(220,38,38,.1); background: #fff; }
+    .fInput::placeholder { color: #c1c8d0; }
+    textarea.fInput { min-height: 150px; resize: vertical; }
+    select.fInput { cursor: pointer; }
+    .fHelp { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+
+    /* ── Modal footer ── */
+    .formModal__foot {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 10px; flex-wrap: wrap; padding: 16px 24px;
+      border-top: 1px solid var(--line); background: #fafbfd;
+      border-radius: 0 0 22px 22px;
+    }
+    .btnSave {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; border: none; padding: 11px 26px; border-radius: 999px;
+      font-size: 13.5px; font-weight: 700; cursor: pointer; font-family: var(--sans);
+      transition: opacity .18s, transform .18s, box-shadow .18s;
+      box-shadow: 0 4px 14px rgba(220,38,38,.35);
+    }
+    .btnSave:hover { opacity:.9; transform:translateY(-1px); box-shadow: 0 8px 20px rgba(220,38,38,.4); }
+    .btnGhost {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 16px; border-radius: 999px;
+      border: 1px solid var(--line); background: #fff; font-size: 13px;
+      font-weight: 600; cursor: pointer; font-family: var(--sans); color: var(--text);
+      transition: background .15s, box-shadow .15s;
+    }
+    .btnGhost:hover { background: #f8fafc; box-shadow: var(--shadow-sm); }
+    .btnDanger {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 16px; border-radius: 999px;
+      border: 1px solid rgba(220,38,38,.3); background: #fff; font-size: 13px;
+      font-weight: 600; cursor: pointer; font-family: var(--sans); color: var(--accent);
+      transition: background .15s;
+    }
+    .btnDanger:hover { background: #fff5f5; }
+    .formHintMsg {
+      font-size: 12.5px; font-weight: 500; padding: 10px 14px;
+      border-radius: 8px; margin-top: 14px; display: none;
+    }
+    .formHintMsg.error   { background: #fff5f5; border: 1px solid rgba(220,38,38,.2); color: var(--accent); display: block; }
+    .formHintMsg.success { background: #f0fdf4; border: 1px solid rgba(5,150,105,.2); color: #059669; display: block; }
+    .formHintMsg.info    { background: #eff6ff; border: 1px solid rgba(37,99,235,.2);  color: #2563eb; display: block; }
+
+    /* ── Image Drop Zone ── */
+    .imgDropZone {
+      position: relative;
+      border: 2px dashed var(--line);
+      border-radius: 14px;
+      background: #fafbfd;
+      min-height: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: border-color .18s, background .18s, box-shadow .18s;
+      overflow: hidden;
+    }
+    .imgDropZone:hover,
+    .imgDropZone:focus { border-color: var(--accent); background: #fff5f5; outline: none; box-shadow: 0 0 0 3px rgba(220,38,38,.1); }
+    .imgDropZone.dragover { border-color: var(--accent); background: #fff0f0; box-shadow: 0 0 0 4px rgba(220,38,38,.15); }
+    .imgDropZone.hasImg   { border-style: solid; border-color: #86efac; background: #000; min-height: 180px; }
+    .imgDropZone__inner   { text-align: center; padding: 20px 16px; pointer-events: none; }
+    .imgDropZone__icon    { font-size: 32px; margin-bottom: 8px; }
+    .imgDropZone__text    { font-size: 13.5px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .imgDropZone__sub     { font-size: 12.5px; color: var(--muted); }
+    .imgDropZone__browse  { color: var(--accent); font-weight: 700; text-decoration: underline; }
+    .imgDropZone__hint    { font-size: 11px; color: #adb5bd; margin-top: 6px; }
+    .imgDropZone__preview {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; border-radius: 12px;
+    }
+    .imgDropZone__remove {
+      position: absolute; top: 8px; right: 8px;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(0,0,0,.6); color: #fff; border: none;
+      font-size: 13px; cursor: pointer; display: grid; place-items: center;
+      transition: background .15s; z-index: 2;
+    }
+    .imgDropZone__remove:hover { background: var(--accent); }
+    .imgDropZone.hasImg .imgDropZone__inner { display: none; }
+  </style>
+  <script src="./config.js"></script>
+  <script src="./apiClient.js"></script>
+</head>
+<body>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="container topbar__inner">
+      <div class="topbar__left">
+        <a class="topbar__btn" href="./index.html">← Kembali ke Portal</a>
+      </div>
+      <div class="topbar__right">
+        <div class="userPill">
+          <span class="userPill-dot"></span>
+          <span id="who">Admin</span>
+        </div>
+        <span class="topbar__sep"></span>
+        <button class="logoutBtn" id="logoutBtn" type="button">⏻ Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="brand">
+    <div class="container brand__inner">
+      <a class="brand__logo" href="./index.html" aria-label="Home">
+        <div class="logoMark">BK</div>
+        <div class="logoText">
+          <div style="display:flex;gap:6px;align-items:baseline">
+            <div class="logoText__big">ADMIN</div>
+            <div class="logoText__big red">BERITA</div>
+          </div>
+          <div class="logoText__sub">Dashboard Kelola Konten</div>
+        </div>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main>
+    <div class="adminPage">
+
+      <!-- Stat Cards -->
+      <div class="statGrid statGrid--6">
+        <div class="statCard">
+          <div class="statCard__icon red">📰</div>
+          <div>
+            <div class="statCard__num" id="statTotal">0</div>
+            <div class="statCard__label">Total Berita</div>
+          </div>
+        </div>
+        <div class="statCard">
+          <div class="statCard__icon blue">🗂</div>
+          <div>
+            <div class="statCard__num" id="statCats">0</div>
+            <div class="statCard__label">Kategori</div>
+          </div>
+        </div>
+        <div class="statCard">
+          <div class="statCard__icon green">🔖</div>
+          <div>
+            <div class="statCard__num" id="statBookmarks">0</div>
+            <div class="statCard__label">Tersimpan</div>
+          </div>
+        </div>
+        <div class="statCard" id="statCardComments" style="cursor:pointer" title="Klik untuk lihat semua komentar">
+          <div class="statCard__icon amber">💬</div>
+          <div>
+            <div class="statCard__num" id="statComments">0</div>
+            <div class="statCard__label">Komentar</div>
+          </div>
+        </div>
+        <div class="statCard" id="statCardPress" style="cursor:pointer" title="Klik untuk lihat press release">
+          <div class="statCard__icon" style="background:#f5f0ff">✉</div>
+          <div>
+            <div class="statCard__num" id="statPress">0</div>
+            <div class="statCard__label">Press Release</div>
+          </div>
+        </div>
+        <div class="statCard" id="statCardContact" style="cursor:pointer" title="Klik untuk lihat pesan masuk">
+          <div class="statCard__icon" style="background:#fff0f6">📨</div>
+          <div>
+            <div class="statCard__num" id="statContact">0</div>
+            <div class="statCard__label">Pesan Masuk</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- News Panel -->
+      <div class="adminPanel">
+        <div class="adminPanel__head">
+          <div class="adminPanel__title">Daftar Berita</div>
+          <div class="adminPanel__tools">
+            <div class="searchWrap">
+              <span class="searchIcon">🔍</span>
+              <input id="adminSearch" class="searchInput" type="search" placeholder="Cari judul / kategori / tag..." autocomplete="off" />
+            </div>
+            <button class="btnNew" id="newBtn" type="button">＋ Berita Baru</button>
+          </div>
+        </div>
+
+        <div style="overflow:auto">
+          <table class="adminTable">
+            <thead>
+              <tr>
+                <th style="min-width:260px">Judul</th>
+                <th>Kategori</th>
+                <th>Nav</th>
+                <th>Tags</th>
+                <th>Tanggal</th>
+                <th style="min-width:170px;text-align:center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+
+        <div class="adminFootTools">
+          <div class="adminFootHint" id="adminHint">—</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btnGhost" id="exportBtn" type="button">⬇ Export JSON</button>
+            <button class="btnGhost" id="importBtn" type="button">⬆ Import JSON</button>
+            <input type="file" id="importFile" accept="application/json" style="display:none" />
+            <button class="btnDanger" id="resetBtn" type="button">🔄 Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pesan Masuk Panel -->
+      <div class="adminPanel" id="inboxPanel" style="margin-top:20px">
+        <div class="adminPanel__head">
+          <div class="adminPanel__title">📬 Pesan Masuk</div>
+          <div class="adminPanel__tools">
+            <div class="tabs" style="background:transparent;border:0;gap:4px;display:flex">
+              <button class="tab active" id="tabPress" type="button" style="padding:7px 14px;border-radius:8px;font-size:12px">✉ Press Release <span id="badgePress" style="background:var(--accent);color:#fff;border-radius:999px;padding:1px 7px;font-size:10px;margin-left:4px">0</span></button>
+              <button class="tab" id="tabContact" type="button" style="padding:7px 14px;border-radius:8px;font-size:12px">📨 Pesan <span id="badgeContact" style="background:#7c3aed;color:#fff;border-radius:999px;padding:1px 7px;font-size:10px;margin-left:4px">0</span></button>
+            </div>
+            <button class="btnGhost" id="clearPressBtn" type="button" style="font-size:12px;padding:7px 14px">🗑 Hapus Semua</button>
+          </div>
+        </div>
+        <div id="inboxContent" style="padding:20px"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__bottom">
+        <p class="footer__copy">© <span id="year"></span> Berita Krian — Admin Dashboard</p>
+        <div class="footer__bottom-links">
+          <a href="./index.html">Portal</a>
+          <a href="./bookmark.html">Bookmark</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ════════════════════════════
+       FORM MODAL
+  ════════════════════════════ -->
+  <div class="formOverlay" id="formOverlay">
+    <div class="formModal" role="dialog" aria-modal="true" aria-labelledby="formTitle">
+
+      <!-- Modal Header -->
+      <div class="formModal__head">
+        <div class="formModal__headLeft">
+          <div class="formModal__badge" id="formBadge">✏️</div>
+          <div>
+            <h2 id="formTitle">Buat Berita Baru</h2>
+            <div class="formModal__sub" id="formSub">Isi semua field yang wajib (*)</div>
+          </div>
+        </div>
+        <div class="formModal__headRight">
+          <a class="btnGhost" id="previewLink" href="#" target="_blank" rel="noopener" style="padding:7px 14px;font-size:12px">👁 Preview</a>
+          <button class="fmClose" id="closeFormBtn" type="button" title="Tutup (Esc)">✕</button>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="formModal__body">
+        <form id="form" novalidate>
+          <input type="hidden" id="id" />
+
+          <div class="field" style="margin-bottom:16px">
+            <label class="fLabel">Judul <span>*</span></label>
+            <input class="fInput" id="title" placeholder="Judul berita yang menarik..." required />
+            <div class="fHelp">Slug URL akan dibuat otomatis dari judul.</div>
+          </div>
+
+          <div class="field" style="margin-bottom:16px">
+            <label class="fLabel">Deskripsi Singkat (SEO)</label>
+            <input class="fInput" id="excerpt" placeholder="Ringkasan 1–2 kalimat untuk SEO..." />
+            <div class="fHelp">Kalau kosong, diambil dari paragraf pertama body.</div>
+          </div>
+
+          <div class="fRow2" style="margin-bottom:16px">
+            <div>
+              <label class="fLabel">Nav Kategori <span>*</span></label>
+              <select id="navKey" class="fInput"></select>
+            </div>
+            <div>
+              <label class="fLabel">Kategori Label <span>*</span></label>
+              <input class="fInput" id="category" placeholder="Contoh: NASIONAL" required />
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:16px">
+            <label class="fLabel">Tags</label>
+            <input class="fInput" id="tags" placeholder="ai, startup, umkm (pisahkan koma)" />
+          </div>
+
+          <div class="field" style="margin-bottom:16px">
+            <label class="fLabel">Gambar <span>*</span></label>
+            <input type="hidden" id="image" />
+            <div class="imgDropZone" id="imgDropZone" tabindex="0" role="button" aria-label="Upload gambar">
+              <div class="imgDropZone__inner" id="imgDropInner">
+                <div class="imgDropZone__icon">🖼️</div>
+                <div class="imgDropZone__text">Drag &amp; drop gambar ke sini</div>
+                <div class="imgDropZone__sub">atau <span class="imgDropZone__browse">klik untuk pilih file</span></div>
+                <div class="imgDropZone__hint">JPG, PNG, WebP — maks. 4 MB</div>
+              </div>
+              <img class="imgDropZone__preview" id="imgPreview" src="" alt="Preview" style="display:none" />
+              <button class="imgDropZone__remove" id="imgRemoveBtn" type="button" title="Hapus gambar" style="display:none">✕</button>
+            </div>
+            <input type="file" id="imgFileInput" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" />
+          </div>
+
+          <div class="fRow2" style="margin-bottom:16px">
+            <div>
+              <label class="fLabel">Penulis <span>*</span></label>
+              <input class="fInput" id="author" placeholder="Redaksi" required />
+            </div>
+            <div>
+              <label class="fLabel">Tanggal <span>*</span></label>
+              <input class="fInput" id="date" placeholder="27 Januari 2026" required />
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:4px">
+            <label class="fLabel">Isi Berita <span>*</span></label>
+            <textarea id="body" class="fInput" placeholder="Tulis isi berita di sini..." required></textarea>
+          </div>
+
+          <div class="formHintMsg" id="formHint"></div>
+        </form>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="formModal__foot">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btnSave" id="saveBtn" type="button">💾 Simpan</button>
+          <button class="btnGhost" id="clearBtn" type="button">↺ Bersihkan</button>
+        </div>
+        <button class="btnDanger" id="deleteBtn" type="button">🗑 Hapus Berita</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./data.js"></script>
+  <script src="./auth.js"></script>
+  <script src="./utils.js"></script>
+  <script src="./store.js"></script>
+  <script src="./features.js"></script>
+  <script src="./modals.js"></script>
+  <script src="./admin.js" defer></script>
+
+  <!-- ════════════════════════════
+       COMMENTS VIEWER MODAL
+  ════════════════════════════ -->
+  <div class="formOverlay" id="cmOverlay">
+    <div class="formModal" style="max-width:700px" role="dialog" aria-modal="true" aria-label="Daftar Komentar">
+      <div class="formModal__head">
+        <div class="formModal__headLeft">
+          <div class="formModal__badge" style="background:linear-gradient(135deg,#f59e0b,#d97706)">💬</div>
+          <div>
+            <h2 style="margin:0;font-size:15px;font-weight:800">Semua Komentar</h2>
+            <div class="formModal__sub" id="cmCount">Memuat...</div>
+          </div>
+        </div>
+        <div class="formModal__headRight">
+          <button class="fmClose" id="cmClose" type="button" title="Tutup">✕</button>
+        </div>
+      </div>
+      <div class="formModal__body" id="cmBody" style="padding:0">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div>
+</body>
+</html>
