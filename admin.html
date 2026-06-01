@@ -371,6 +371,7 @@
               <span class="searchIcon">🔍</span>
               <input id="adminSearch" class="searchInput" type="search" placeholder="Cari judul / kategori / tag..." autocomplete="off" />
             </div>
+            <button class="btnGhost" id="kompasBtn" type="button" style="border-color:#1e73be;color:#1e73be;font-weight:700">⚡ Auto Take Kompas</button>
             <button class="btnNew" id="newBtn" type="button">＋ Berita Baru</button>
           </div>
         </div>
@@ -560,6 +561,78 @@
       </div>
       <div class="formModal__body" id="cmBody" style="padding:0">
         <!-- filled by JS -->
+      </div>
+  <!-- ════════════════════════════
+       KOMPAS.ID AUTO-TAKE MODAL
+  ════════════════════════════ -->
+  <div class="formOverlay" id="kompasOverlay">
+    <div class="formModal" style="max-width:540px" role="dialog" aria-modal="true" aria-labelledby="kompasTitle">
+      <!-- Modal Header -->
+      <div class="formModal__head">
+        <div class="formModal__headLeft">
+          <div class="formModal__badge" style="background:linear-gradient(135deg,#1e73be,#105a96)">⚡</div>
+          <div>
+            <h2 id="kompasTitle" style="margin:0;font-size:15px;font-weight:800">Auto Take Kompas.id</h2>
+            <div class="formModal__sub">Ambil konten otomatis dari API Kompas.id</div>
+          </div>
+        </div>
+        <div class="formModal__headRight">
+          <button class="fmClose" id="kompasClose" type="button" title="Tutup">✕</button>
+        </div>
+      </div>
+      <!-- Modal Body -->
+      <div class="formModal__body" style="padding:22px">
+        <form id="kompasForm" novalidate>
+          <div class="field" style="margin-bottom:16px">
+            <label class="fLabel">Mode Integrasi</label>
+            <div style="display:flex;gap:20px;margin-top:8px">
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+                <input type="radio" name="kompasMode" value="simulasi" checked />
+                <span>Simulasi (Demo Tanpa Key)</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+                <input type="radio" name="kompasMode" value="live" />
+                <span>Koneksi API Live</span>
+              </label>
+            </div>
+          </div>
+
+          <div id="kompasLiveFields" style="display:none">
+            <div class="field" style="margin-bottom:16px">
+              <label class="fLabel">Authorization Token (API Key) <span>*</span></label>
+              <input class="fInput" id="kompasToken" placeholder="Contoh: 205ae37a-3c08-yyyy-xxcc..." />
+              <div class="fHelp">Dapatkan token dari akun email partner Kompas.id Anda.</div>
+            </div>
+
+            <div class="field" style="margin-bottom:16px">
+              <label class="fLabel">Domain Name Partner <span>*</span></label>
+              <input class="fInput" id="kompasDomain" placeholder="Contoh: mypartnerdomain.com" />
+              <div class="fHelp">Domain yang terdaftar dan disepakati di pihak Kompas.id.</div>
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:16px">
+            <label class="fLabel">Nav Kategori Target <span>*</span></label>
+            <select id="kompasNavKey" class="fInput"></select>
+            <div class="fHelp">Kategori di portal BK tempat berita impor ini akan disimpan.</div>
+          </div>
+
+          <div class="field" style="margin-bottom:4px">
+            <label class="fLabel">Jumlah Berita yang Diambil</label>
+            <select id="kompasLimit" class="fInput">
+              <option value="1">1 Berita Terbaru</option>
+              <option value="3" selected>3 Berita Terbaru</option>
+              <option value="5">5 Berita Terbaru</option>
+            </select>
+          </div>
+
+          <div class="formHintMsg" id="kompasHint" style="margin-top:12px;display:none"></div>
+        </form>
+      </div>
+      <!-- Modal Footer -->
+      <div class="formModal__foot">
+        <button class="btnSave" id="kompasSyncBtn" type="button" style="background:linear-gradient(135deg,#1e73be,#105a96);box-shadow: 0 4px 14px rgba(30,115,190,.35)">⚡ Sinkronisasi Sekarang</button>
+        <button class="btnGhost" id="kompasCancelBtn" type="button">Tutup</button>
       </div>
     </div>
   </div>

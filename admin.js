@@ -427,6 +427,7 @@ async function init(){
   const canDelete=sess.role==="admin";
   if(!canEdit){
     const nb=document.querySelector("#newBtn"); if(nb) nb.style.display="none";
+    const kb=document.querySelector("#kompasBtn"); if(kb) kb.style.display="none";
   }
   if(!canDelete){
     ["#deleteBtn","#resetBtn"].forEach(s=>{
@@ -440,8 +441,176 @@ async function init(){
   document.querySelector("#formOverlay").addEventListener("click",e=>{
     if(e.target===document.querySelector("#formOverlay")) closeModal();
   });
+
+  // --- KOMPAS.ID AUTO-TAKE LOGIC ---
+  const kompasBtn = document.querySelector("#kompasBtn");
+  const kompasOverlay = document.querySelector("#kompasOverlay");
+  const closeKompas = () => {
+    if (kompasOverlay) {
+      kompasOverlay.classList.remove("open");
+      document.body.style.overflow = "";
+    }
+  };
+
+  if (kompasBtn) {
+    kompasBtn.addEventListener("click", () => {
+      // Clear hint & form
+      const hint = document.querySelector("#kompasHint");
+      if (hint) { hint.style.display = "none"; hint.textContent = ""; }
+      document.querySelector("#kompasToken").value = "";
+      document.querySelector("#kompasDomain").value = "";
+      document.querySelector("input[name='kompasMode'][value='simulasi']").checked = true;
+      document.querySelector("#kompasLiveFields").style.display = "none";
+
+      // Populate Categories select
+      const navSelect = document.querySelector("#kompasNavKey");
+      if (navSelect) {
+        navSelect.innerHTML = allCatOptions()
+          .map(c => `<option value="${c.key}">${c.label}</option>`).join("");
+      }
+
+      // Open Modal
+      if (kompasOverlay) {
+        kompasOverlay.classList.add("open");
+        document.body.style.overflow = "hidden";
+      }
+    });
+  }
+
+  // Toggle live fields
+  document.querySelectorAll("input[name='kompasMode']").forEach(radio => {
+    radio.addEventListener("change", (e) => {
+      const liveFields = document.querySelector("#kompasLiveFields");
+      if (liveFields) {
+        liveFields.style.display = e.target.value === "live" ? "block" : "none";
+      }
+    });
+  });
+
+  document.querySelector("#kompasClose")?.addEventListener("click", closeKompas);
+  document.querySelector("#kompasCancelBtn")?.addEventListener("click", closeKompas);
+  kompasOverlay?.addEventListener("click", e => {
+    if (e.target === kompasOverlay) closeKompas();
+  });
+
+  // Sync action
+  document.querySelector("#kompasSyncBtn")?.addEventListener("click", async () => {
+    const syncBtn = document.querySelector("#kompasSyncBtn");
+    const hint = document.querySelector("#kompasHint");
+    
+    const mode = document.querySelector("input[name='kompasMode']:checked").value;
+    const token = document.querySelector("#kompasToken").value.trim();
+    const domain = document.querySelector("#kompasDomain").value.trim();
+    const navKey = document.querySelector("#kompasNavKey").value;
+    const limit = Number(document.querySelector("#kompasLimit").value);
+
+    if (mode === "live" && (!token || !domain)) {
+      if (hint) {
+        hint.style.display = "block";
+        hint.className = "formHintMsg error";
+        hint.textContent = "⚠ Token dan Domain wajib diisi untuk mode Live API.";
+      }
+      return;
+    }
+
+    // Set loading
+    if (syncBtn) { syncBtn.disabled = true; syncBtn.textContent = "⏳ Mensinkronisasikan..."; }
+    if (hint) { hint.style.display = "none"; }
+
+    try {
+      let res;
+      if (useBackend) {
+        res = await window.ApiClient.request("/api/kompas/sync", {
+          method: "POST",
+          body: JSON.stringify({ mode, token, domain, navKey, limit })
+        });
+      } else {
+        // Fallback simulation for client-side mode (if backend not active)
+        if (mode === "live") {
+          throw new Error("Mode Live API memerlukan backend server yang aktif.");
+        }
+        
+        // Mock client-side insertion
+        const mockArts = [
+          {
+            title: "Digitalisasi Pasar Tradisional di Jawa Timur Dorong Efisiensi Transaksi UMKM",
+            excerpt: "Penerapan sistem pembayaran digital QRIS dan digitalisasi tata kelola pedagang pasar di Jawa Timur terbukti melipatgandakan omzet UMKM lokal secara signifikan.",
+            category: "EKONOMI & BISNIS",
+            author: "Kabar Kompas",
+            date: new Date().toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' }),
+            image: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1600&q=75",
+            body: "Surabaya, Kompas - Langkah digitalisasi pasar tradisional di berbagai wilayah Jawa Timur terus diakselerasi. Dinas Koperasi dan UMKM bekerja sama dengan Bank Indonesia menggalakkan penggunaan QRIS dan pencatatan keuangan digital bagi para pedagang.\n\nHasil evaluasi menunjukkan bahwa pasar-pasar yang telah menerapkan ekosistem digital mencatatkan peningkatan rata-rata omzet hingga 35 persen dalam kurun waktu enam bulan.\n\n\"Digitalisasi memotong rantai transaksi dan memberikan kepastian pencatatan keuangan bagi pedagang kecil. Mereka kini lebih mudah mengakses permodalan perbankan,\" ujar kepala dinas terkait.\n\nSelain pembayaran, sistem manajemen stok berbasis aplikasi sederhana juga mulai diperkenalkan guna mencegah kelangkaan bahan pokok di tingkat eceran.",
+            tags: ["digitalisasi", "pasar", "umkm", "ekonomi", "jawatimur"]
+          },
+          {
+            title: "Proyek Jalur Lingkar Selatan Sidoarjo Dipercepat Guna Kurangi Kemacetan Industri Krian",
+            excerpt: "Pemerintah Kabupaten Sidoarjo mempercepat pembangunan infrastruktur jalan lingkar selatan guna mengalihkan arus kendaraan besar dari pusat kota Krian.",
+            category: "PROPERTI & INFRASTRUKTUR",
+            author: "Harian Kompas",
+            date: new Date().toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' }),
+            image: "https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=1600&q=75",
+            body: "Sidoarjo, Kompas - Menumpuknya kendaraan logistik bertonase besar di persimpangan jalan utama Krian menjadi perhatian serius Pemkab Sidoarjo. Jalur Lingkar Selatan sepanjang 8,5 kilometer ditargetkan rampung pada awal tahun depan.\n\nBupati Sidoarjo menyampaikan bahwa percepatan pembebasan lahan kini telah mencapai 92 persen. Konstruksi jalan beton (rigid pavement) dirancang khusus agar mampu menahan beban kendaraan hingga 12 ton.\n\n\"Kami ingin arus logistik industri tetap lancar tanpa harus mengorbankan kenyamanan pengendara sepeda motor dan warga di kawasan pemukiman Krian,\" jelasnya saat meninjau proyek.\n\nDengan selesainya jalur lingkar ini, kemacetan di kawasan perlintasan kereta api Krian diperkirakan berkurang drastis hingga 40 persen.",
+            tags: ["infrastruktur", "jalan", "sidoarjo", "krian", "kemacetan"]
+          },
+          {
+            title: "Menjaga Kelestarian Ekosistem Sungai Brantas Melalui Gerakas Restorasi Komunitas Hijau Sidoarjo",
+            excerpt: "Puluhan komunitas peduli lingkungan melakukan aksi bersih-bersih sampah plastik dan penanaman pohon pelindung di sepanjang bantaran Sungai Brantas Sidoarjo.",
+            category: "LINGKUNGAN",
+            author: "Kabar Kompas",
+            date: new Date().toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' }),
+            image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=75",
+            body: "Sidoarjo, Kompas - Restorasi ekologis Sungai Brantas menjadi agenda mendesak bagi komunitas lingkungan di Jawa Timur. Aksi kolaboratif akhir pekan kemarin berhasil mengumpulkan lebih dari 2,5 ton sampah plastik dari badan sungai.\n\nSelain pembersihan fisik, dilakukan pula penanaman 1.500 pohon vetiver dan bambu di tebing sungai guna mencegah erosi dan longsor bantaran.\n\nKoordinator gerakan menyatakan pentingnya partisipasi aktif warga bantaran. \"Sungai adalah sumber kehidupan, bukan tempat sampah raksasa. Edukasi pemilahan sampah dari rumah tangga terus kami galakkan,\" tuturnya.\n\nKegiatan ini juga didukung oleh sektor swasta setempat melalui dana tanggung jawab sosial perusahaan (CSR).",
+            tags: ["lingkungan", "sungai", "brantas", "sidoarjo", "konservasi"]
+          }
+        ];
+        res = { ok: true, count: Math.min(limit, mockArts.length), articles: mockArts.slice(0, limit) };
+      }
+
+      if (res && res.ok && res.articles) {
+        // Save to client's window.NewsStore
+        res.articles.forEach(art => {
+          const clientCat = allCatOptions().find(c => c.key === navKey);
+          window.NewsStore.upsert({
+            id: Date.now() + Math.floor(Math.random() * 100000), // unique timestamp
+            title: art.title,
+            excerpt: art.excerpt,
+            category: clientCat ? clientCat.label : art.category,
+            navKey: navKey,
+            tags: art.tags,
+            image: art.image,
+            author: art.author,
+            date: art.date,
+            body: art.body
+          });
+        });
+
+        if (window.Toast) {
+          window.Toast.show(`Berhasil mengimpor ${res.count} artikel Kompas.id! ⚡`, "success");
+        }
+        closeKompas();
+        renderRows();
+        updateStats(window.NewsStore.getAll());
+        
+        // If we ran with backend, reload after 1.2s to match new static templates
+        if (useBackend) {
+          setTimeout(() => { location.reload(); }, 1200);
+        }
+      } else {
+        throw new Error(res.error || "Gagal sinkronisasi");
+      }
+    } catch (err) {
+      if (hint) {
+        hint.style.display = "block";
+        hint.className = "formHintMsg error";
+        hint.textContent = "❌ Error: " + (err.message || err);
+      }
+    } finally {
+      if (syncBtn) { syncBtn.disabled = false; syncBtn.textContent = "⚡ Sinkronisasi Sekarang"; }
+    }
+  });
+
   document.addEventListener("keydown",e=>{
-    if(e.key==="Escape"){ closeModal(); closeCmModal(); }
+    if(e.key==="Escape"){ closeModal(); closeCmModal(); closeKompas(); }
   });
 
   /* Comments modal */
