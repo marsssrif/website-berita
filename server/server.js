@@ -630,6 +630,12 @@ app.delete("/api/contact", requireAuth, requireRole(["admin"]), async (req, res)
   res.json({ ok: true });
 });
 
-const port = parseInt(process.env.PORT || "5175", 10);
-app.listen(port, ()=>console.log("API server running http://localhost:"+port));
+// Export for Vercel serverless
+export default app;
+
+// Listen locally
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const port = parseInt(process.env.PORT || "5175", 10);
+  app.listen(port, ()=>console.log("API server running http://localhost:"+port));
+}
 
