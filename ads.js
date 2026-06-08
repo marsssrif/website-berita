@@ -5,7 +5,7 @@
 (function () {
   'use strict';
 
-  const API_BASE = (window.BK_CONFIG && window.BK_CONFIG.API) || 'http://localhost:5175';
+  const API_BASE = (window.BK_CONFIG && window.BK_CONFIG.API) || (window.SITE_CONFIG && window.SITE_CONFIG.API_BASE) || 'http://localhost:5175';
 
   /* ── Placeholder HTML saat iklan tidak aktif ── */
   function placeholderHTML(label, w, h) {
