@@ -7,6 +7,7 @@ import bcrypt from "bcryptjs";
 import path from "path";
 import { fileURLToPath } from "url";
 import nodemailer from "nodemailer";
+import fs from "fs";
 
 import { openDb, get, all, run } from "./db.js";
 import { initSchema } from "./init.js";
@@ -54,9 +55,39 @@ app.post("/api/email/send", requireAuth, requireRole(["admin", "editor"]), async
     return res.status(400).json({ error: "Missing to, subject, or text fields" });
   }
 
-  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM } = process.env;
+  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, MOCK_EMAIL } = process.env;
+  
+  // Helper function to handle simulated/mock email sending
+  const handleSimulatedSend = (reason) => {
+    console.warn(`[SIMULATION] Email to ${to} was simulated. Reason: ${reason}`);
+    console.log("-----------------------------------------");
+    console.log(`Subject: ${subject}`);
+    console.log(`Text:\n${text}`);
+    console.log("-----------------------------------------");
+
+    try {
+      const emailsDir = path.join(__dirname, "sent_emails");
+      if (!fs.existsSync(emailsDir)) {
+        fs.mkdirSync(emailsDir, { recursive: true });
+      }
+      const filename = `${Date.now()}-${to.replace(/[^a-zA-Z0-9]/g, "_")}.txt`;
+      const fileContent = `To: ${to}\nSubject: ${subject}\nDate: ${new Date().toISOString()}\nReason: ${reason}\n\n${text}`;
+      fs.writeFileSync(path.join(emailsDir, filename), fileContent, "utf8");
+    } catch (fsErr) {
+      console.error("Failed to write simulated email to file:", fsErr);
+    }
+  };
+
+  // If mock mode is explicitly enabled
+  if (MOCK_EMAIL === "true") {
+    handleSimulatedSend("MOCK_EMAIL environment variable is true");
+    return res.json({ ok: true, simulated: true, info: "Email simulated (Mock mode)" });
+  }
+
+  // If SMTP configuration is missing, fallback to simulation mode automatically
   if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
-    return res.status(501).json({ error: "SMTP configuration is incomplete. Please check server/.env file." });
+    handleSimulatedSend("SMTP configuration is incomplete");
+    return res.json({ ok: true, simulated: true, info: "Email simulated (Incomplete SMTP config)" });
   }
 
   const secure = process.env.SMTP_SECURE === "true";
@@ -83,8 +114,10 @@ app.post("/api/email/send", requireAuth, requireRole(["admin", "editor"]), async
     console.log("Email sent: " + info.response);
     res.json({ ok: true, info: info.response });
   } catch (err) {
-    console.error("Error sending email:", err);
-    res.status(500).json({ error: err.message || "Failed to send email" });
+    console.error("SMTP send failed. Falling back to Simulation Mode. Error:", err.message || err);
+    handleSimulatedSend(`SMTP failed: ${err.message || err}`);
+    // Return a successful response so the client-side does not trigger manual mailto fallback
+    res.json({ ok: true, simulated: true, info: `Email simulated (SMTP failed: ${err.message || err})` });
   }
 });
 
@@ -168,6 +201,57 @@ app.delete("/api/articles/:slug", requireAuth, requireRole(["admin"]), async (re
   db.close();
   res.json({ ok:true });
 });
+
+/* ══════════════════════════════════════
+   ADS — Manajemen Iklan
+   GET  /api/ads          → semua slot (publik)
+   PUT  /api/ads/:slot    → update slot (admin/editor)
+   DEL  /api/ads/:slot/image → hapus gambar (admin/editor)
+══════════════════════════════════════ */
+app.get("/api/ads", async (req, res) => {
+  const db = openDb();
+  const rows = await all(db, "SELECT id, slot, image, link, active, updated_at FROM ads ORDER BY id");
+  db.close();
+  res.json({ items: rows });
+});
+
+app.post("/api/ads", requireAuth, requireRole(["admin","editor"]), async (req, res) => {
+  const { slot, image, link, active } = req.body || {};
+  if (!slot || !image) return res.status(400).json({ error: "Slot dan gambar wajib diisi" });
+
+  const VALID_SLOTS = ["banner-header", "sidebar-square"];
+  if (!VALID_SLOTS.includes(slot)) return res.status(400).json({ error: "Slot tidak valid" });
+
+  const db = openDb();
+  await run(db,
+    "INSERT INTO ads(slot, image, link, active, updated_at) VALUES(?,?,?,?,?)",
+    [slot, image, link || "", active ? 1 : 0, new Date().toISOString()]
+  );
+  db.close();
+  res.status(201).json({ ok: true });
+});
+
+app.put("/api/ads/:id", requireAuth, requireRole(["admin","editor"]), async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { link, active } = req.body || {};
+
+  const db = openDb();
+  await run(db,
+    "UPDATE ads SET link=?, active=?, updated_at=? WHERE id=?",
+    [link ?? "", active ? 1 : 0, new Date().toISOString(), id]
+  );
+  db.close();
+  res.json({ ok: true });
+});
+
+app.delete("/api/ads/:id", requireAuth, requireRole(["admin","editor"]), async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const db = openDb();
+  await run(db, "DELETE FROM ads WHERE id=?", [id]);
+  db.close();
+  res.json({ ok: true });
+});
+
 
 // Admin: create user
 app.post("/api/users", requireAuth, requireRole(["admin"]), async (req,res)=>{
@@ -428,5 +512,124 @@ app.post("/api/kompas/sync", requireAuth, requireRole(["admin", "editor"]), asyn
   }
 });
 
+/* ══════════════════════════════════════
+   PRESS RELEASE API
+   POST   /api/press           → submit (publik)
+   GET    /api/press           → list semua (auth)
+   PATCH  /api/press/:id/status → update status (auth)
+   DELETE /api/press/:id       → hapus satu (auth)
+   DELETE /api/press           → hapus semua (admin)
+══════════════════════════════════════ */
+app.post("/api/press", async (req, res) => {
+  const d = req.body || {};
+  if (!d.judul || !d.nama || !d.email) {
+    return res.status(400).json({ error: "Field judul, nama, email wajib diisi" });
+  }
+  const db = openDb();
+  await run(db,
+    `INSERT INTO press_releases(nama,org,email,telp,web,kategori,tanggal,judul,isi,catatan,photos_json,created_at)
+     VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`,
+    [d.nama, d.org||"", d.email, d.telp||"", d.web||"", d.kategori||"",
+     d.tanggal||"", d.judul, d.isi||"", d.catatan||"",
+     JSON.stringify(d.photos||[]), nowIso()]
+  );
+  db.close();
+  res.status(201).json({ ok: true });
+});
+
+app.get("/api/press", requireAuth, requireRole(["admin","editor"]), async (req, res) => {
+  const db = openDb();
+  const rows = await all(db,
+    "SELECT * FROM press_releases ORDER BY created_at DESC"
+  );
+  db.close();
+  const items = rows.map(r => ({ ...r, photos: JSON.parse(r.photos_json||"[]") }));
+  res.json({ items });
+});
+
+app.patch("/api/press/:id/status", requireAuth, requireRole(["admin","editor"]), async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { status, status_by } = req.body || {};
+  if (!["menunggu","diterima","ditolak"].includes(status)) {
+    return res.status(400).json({ error: "Status tidak valid" });
+  }
+  const db = openDb();
+  await run(db,
+    "UPDATE press_releases SET status=?, status_ts=?, status_by=? WHERE id=?",
+    [status, new Date().toLocaleString("id-ID"), status_by||"Admin", id]
+  );
+  const row = await get(db, "SELECT * FROM press_releases WHERE id=?", [id]);
+  db.close();
+  if (!row) return res.status(404).json({ error: "Not found" });
+  res.json({ ok: true, item: { ...row, photos: JSON.parse(row.photos_json||"[]") } });
+});
+
+app.delete("/api/press/:id", requireAuth, requireRole(["admin","editor"]), async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const db = openDb();
+  await run(db, "DELETE FROM press_releases WHERE id=?", [id]);
+  db.close();
+  res.json({ ok: true });
+});
+
+app.delete("/api/press", requireAuth, requireRole(["admin"]), async (req, res) => {
+  const db = openDb();
+  await run(db, "DELETE FROM press_releases");
+  db.close();
+  res.json({ ok: true });
+});
+
+/* ══════════════════════════════════════
+   CONTACT MESSAGES API
+   POST   /api/contact         → submit (publik)
+   GET    /api/contact         → list semua (auth)
+   DELETE /api/contact/:id     → hapus satu (auth)
+   DELETE /api/contact         → hapus semua (admin)
+══════════════════════════════════════ */
+app.post("/api/contact", async (req, res) => {
+  const d = req.body || {};
+  if (!d.nama || !d.email || !d.pesan) {
+    return res.status(400).json({ error: "Field nama, email, pesan wajib diisi" });
+  }
+  const db = openDb();
+  await run(db,
+    `INSERT INTO contact_messages(nama,email,telp,subjek,pesan,screenshot_json,created_at)
+     VALUES(?,?,?,?,?,?,?)`,
+    [d.nama, d.email, d.telp||"", d.subjek||"", d.pesan,
+     d.screenshot ? JSON.stringify(d.screenshot) : null, nowIso()]
+  );
+  db.close();
+  res.status(201).json({ ok: true });
+});
+
+app.get("/api/contact", requireAuth, requireRole(["admin","editor"]), async (req, res) => {
+  const db = openDb();
+  const rows = await all(db,
+    "SELECT * FROM contact_messages ORDER BY created_at DESC"
+  );
+  db.close();
+  const items = rows.map(r => ({
+    ...r,
+    screenshot: r.screenshot_json ? JSON.parse(r.screenshot_json) : null
+  }));
+  res.json({ items });
+});
+
+app.delete("/api/contact/:id", requireAuth, requireRole(["admin","editor"]), async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const db = openDb();
+  await run(db, "DELETE FROM contact_messages WHERE id=?", [id]);
+  db.close();
+  res.json({ ok: true });
+});
+
+app.delete("/api/contact", requireAuth, requireRole(["admin"]), async (req, res) => {
+  const db = openDb();
+  await run(db, "DELETE FROM contact_messages");
+  db.close();
+  res.json({ ok: true });
+});
+
 const port = parseInt(process.env.PORT || "5175", 10);
 app.listen(port, ()=>console.log("API server running http://localhost:"+port));
+

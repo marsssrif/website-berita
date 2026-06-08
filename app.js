@@ -1,5 +1,33 @@
 const { esc, slugify } = window.Utils;
 
+/* ===== SORT BERITA BERDASARKAN TANGGAL (terbaru dulu) ===== */
+const ID_MONTHS = {
+  januari:1, februari:2, maret:3, april:4, mei:5, juni:6,
+  juli:7, agustus:8, september:9, oktober:10, november:11, desember:12
+};
+function parseIdDate(str){
+  if(!str) return 0;
+  const parts = str.trim().toLowerCase().split(/\s+/);
+  if(parts.length === 3){
+    const d = parseInt(parts[0]) || 0;
+    const m = ID_MONTHS[parts[1]] || 0;
+    const y = parseInt(parts[2]) || 0;
+    return y * 10000 + m * 100 + d;
+  }
+  return 0; // "Baru saja", "10 menit lalu", dll — tetap di atas
+}
+function sortByDate(arr){
+  return [...arr].sort((a, b) => {
+    const da = parseIdDate(a.date);
+    const db = parseIdDate(b.date);
+    // Jika salah satu 0 (format relatif), taruh di atas
+    if(da === 0 && db === 0) return 0;
+    if(da === 0) return -1;
+    if(db === 0) return 1;
+    return db - da; // terbaru dulu
+  });
+}
+
 function buildDetailUrl(article){
   const slug = slugify(article.title);
   return `./detail.html?slug=${encodeURIComponent(slug)}`;
@@ -93,12 +121,19 @@ function initTicker(allNews){
 }
 
 
-/* ===== BOOKMARK BADGE (topbar) ===== */
+/* ===== BOOKMARK BADGE (topbar + mobile) ===== */
 function updateBkBadge(){
   const badge = document.querySelector("#bkBadge");
-  if(!badge || !window.BookmarkStore) return;
-  const cnt = window.BookmarkStore.count();
-  badge.textContent = cnt > 0 ? cnt : "";
+  if(badge && window.BookmarkStore){
+    const cnt = window.BookmarkStore.count();
+    badge.textContent = cnt > 0 ? cnt : "";
+  }
+  // Sync mobile badge juga
+  const mobileBadge = document.querySelector("#mobileBkBadge");
+  if(mobileBadge && window.BookmarkStore){
+    const cnt = window.BookmarkStore.count();
+    mobileBadge.textContent = cnt > 0 ? cnt : "";
+  }
 }
 
 
@@ -136,7 +171,7 @@ function renderSidebars(allNews){
   document.querySelector("#pane-trending").innerHTML = trend.map(sideItemHTML).join("");
   document.querySelector("#pane-comments").innerHTML = comm.map(sideItemHTML).join("");
 
-  const latest = allNews.slice(0, 6);
+  const latest = sortByDate(allNews).slice(0, 6);
   document.querySelector("#pane-latest").innerHTML = latest.map(sideItemHTML).join("");
 }
 
@@ -280,7 +315,8 @@ function init(){
 
   renderNav("berita-utama");
 
-  const allNews = window.NewsStore.getAll();
+  const allNews    = sortByDate(window.NewsStore.getAll());
+
   const featured = allNews[0];
   if(featured) renderHero(featured);
 
@@ -299,6 +335,18 @@ function init(){
     headerSearch.addEventListener("keydown", e => {
       if(e.key === "Enter" && headerSearch.value.trim())
         location.href = `./kategori.html?cat=berita-utama&q=${encodeURIComponent(headerSearch.value.trim())}`;
+    });
+  }
+
+  // Mobile search button → scroll & fokus ke search di konten
+  const mobileSearchBtn = document.querySelector("#mobileSearchBtn");
+  if(mobileSearchBtn){
+    mobileSearchBtn.addEventListener("click", () => {
+      const searchInput = document.querySelector("#homeSearch");
+      if(searchInput){
+        searchInput.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => searchInput.focus(), 350);
+      }
     });
   }
 

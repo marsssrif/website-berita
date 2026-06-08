@@ -309,13 +309,26 @@ function updateStats(items){
     try{ return JSON.parse(localStorage.getItem('pb_bookmarks_v1')||'[]').length; }catch{ return 0; }
   })();
   if(el('statComments'))  el('statComments').textContent  = countAllComments();
-  // Press & Contact counts
-  const pressCount = window.PressStore ? window.PressStore.getAll().length : 0;
-  const contactCount = window.ContactStore ? window.ContactStore.getAll().length : 0;
-  if(el('statPress'))   el('statPress').textContent   = pressCount;
-  if(el('statContact')) el('statContact').textContent = contactCount;
-  if(el('badgePress'))   el('badgePress').textContent   = pressCount;
-  if(el('badgeContact')) el('badgeContact').textContent = contactCount;
+  // Press & Contact counts diambil dari API secara async
+  refreshInboxBadges();
+}
+
+async function refreshInboxBadges() {
+  const el = id => document.querySelector('#'+id);
+  try {
+    const token = window.ApiClient && window.ApiClient.getToken ? window.ApiClient.getToken() : null;
+    if (!token) return;
+    const [pr, ct] = await Promise.all([
+      window.ApiClient.request('/api/press'),
+      window.ApiClient.request('/api/contact')
+    ]);
+    const pc = (pr.items||[]).length;
+    const cc = (ct.items||[]).length;
+    if(el('statPress'))    el('statPress').textContent    = pc;
+    if(el('statContact'))  el('statContact').textContent  = cc;
+    if(el('badgePress'))   el('badgePress').textContent   = pc;
+    if(el('badgeContact')) el('badgeContact').textContent = cc;
+  } catch {/* biarkan 0 jika gagal */}
 }
 
 /* ── Search ── */
@@ -715,16 +728,14 @@ async function init(){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 let inboxActiveTab = 'press';
 
-/* ── Status update helper ── */
-function updatePressStatus(id, newStatus) {
-  const list = window.PressStore ? window.PressStore.getAll() : [];
-  const idx  = list.findIndex(x => x.id === id);
-  if (idx === -1) return null;
-  list[idx].status   = newStatus;
-  list[idx].statusTs = new Date().toLocaleString('id-ID');
-  list[idx].statusBy = document.querySelector('#who')?.textContent?.split('\u00b7')[0]?.trim() || 'Admin';
-  localStorage.setItem('bk_press_releases', JSON.stringify(list));
-  return list[idx];
+/* ── Status update helper (via API) ── */
+async function updatePressStatus(id, newStatus) {
+  const who = document.querySelector('#who')?.textContent?.split('\u00b7')[0]?.trim() || 'Admin';
+  const res = await window.ApiClient.request(`/api/press/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: newStatus, status_by: who })
+  });
+  return res.item;
 }
 
 /* ── Email templates ── */
@@ -819,13 +830,21 @@ function statusBadgeHtml(status) {
   return '<span class="pr-status-badge pr-status-new">\ud83d\udd14 Menunggu Review</span>';
 }
 
-function renderInbox() {
+async function renderInbox() {
   const content = document.querySelector('#inboxContent');
   if (!content) return;
 
-  const items = inboxActiveTab === 'press'
-    ? (window.PressStore ? window.PressStore.getAll() : [])
-    : (window.ContactStore ? window.ContactStore.getAll() : []);
+  content.innerHTML = `<div style="padding:32px;text-align:center;color:var(--muted)">⏳ Memuat...</div>`;
+
+  let items = [];
+  try {
+    const endpoint = inboxActiveTab === 'press' ? '/api/press' : '/api/contact';
+    const data = await window.ApiClient.request(endpoint);
+    items = data.items || [];
+  } catch (err) {
+    content.innerHTML = `<div style="padding:32px;text-align:center;color:var(--muted)">❌ Gagal memuat data: ${err.message||''}</div>`;
+    return;
+  }
 
   if (items.length === 0) {
     const icon  = inboxActiveTab === 'press' ? '✉' : '📨';
@@ -953,21 +972,22 @@ function renderInbox() {
   content.querySelectorAll('[data-accept]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const id   = Number(btn.dataset.accept);
-      const item = updatePressStatus(id, 'diterima');
-      if (!item) return;
-
-      const emailData = getAcceptEmailData(item);
       btn.disabled = true;
       const originalText = btn.innerHTML;
       btn.innerHTML = '⏳ Mengirim...';
-
-      await sendEmailAutomatic(item, emailData);
-
-      btn.disabled = false;
-      btn.innerHTML = originalText;
-
-      renderInbox();
-      updateStats(window.NewsStore.getAll());
+      try {
+        const item = await updatePressStatus(id, 'diterima');
+        if (!item) return;
+        const emailData = getAcceptEmailData(item);
+        await sendEmailAutomatic(item, emailData);
+      } catch(e) {
+        console.error(e);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        renderInbox();
+        refreshInboxBadges();
+      }
     });
   });
 
@@ -976,59 +996,64 @@ function renderInbox() {
     btn.addEventListener('click', async () => {
       const id     = Number(btn.dataset.reject);
       const alasan = prompt('Alasan penolakan (opsional, akan disertakan dalam email):', '');
-      if (alasan === null) return; // user batal
-
-      const item = updatePressStatus(id, 'ditolak');
-      if (!item) return;
-
-      const emailData = getRejectEmailData(item, alasan);
+      if (alasan === null) return;
       btn.disabled = true;
       const originalText = btn.innerHTML;
       btn.innerHTML = '⏳ Mengirim...';
-
-      await sendEmailAutomatic(item, emailData);
-
-      btn.disabled = false;
-      btn.innerHTML = originalText;
-
-      renderInbox();
-      updateStats(window.NewsStore.getAll());
+      try {
+        const item = await updatePressStatus(id, 'ditolak');
+        if (!item) return;
+        const emailData = getRejectEmailData(item, alasan);
+        await sendEmailAutomatic(item, emailData);
+      } catch(e) {
+        console.error(e);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        renderInbox();
+        refreshInboxBadges();
+      }
     });
   });
 
   /* ── Reset status ── */
   content.querySelectorAll('[data-reset-status]').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       if (!confirm('Reset status ke "Menunggu Review"?')) return;
-      updatePressStatus(Number(btn.dataset.resetStatus), 'baru');
-      if (window.Toast) window.Toast.show('Status direset 🔄', 'info');
+      try {
+        await updatePressStatus(Number(btn.dataset.resetStatus), 'menunggu');
+        if (window.Toast) window.Toast.show('Status direset 🔄', 'info');
+      } catch(e) { console.error(e); }
       renderInbox();
+      refreshInboxBadges();
     });
   });
 
   /* ── Delete press ── */
   content.querySelectorAll('[data-del-press]').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       if (!confirm('Hapus press release ini?')) return;
       const id = Number(btn.dataset.delPress);
-      if (window.PressStore) {
-        localStorage.setItem('bk_press_releases', JSON.stringify(window.PressStore.getAll().filter(x => x.id !== id)));
-      }
-      updateStats(window.NewsStore.getAll());
+      try {
+        await window.ApiClient.request(`/api/press/${id}`, { method: 'DELETE' });
+        if (window.Toast) window.Toast.show('Dihapus ✅', 'success');
+      } catch(e) { console.error(e); }
       renderInbox();
+      refreshInboxBadges();
     });
   });
 
   /* ── Delete contact ── */
   content.querySelectorAll('[data-del-contact]').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       if (!confirm('Hapus pesan ini?')) return;
       const id = Number(btn.dataset.delContact);
-      if (window.ContactStore) {
-        localStorage.setItem('bk_contacts', JSON.stringify(window.ContactStore.getAll().filter(x => x.id !== id)));
-      }
-      updateStats(window.NewsStore.getAll());
+      try {
+        await window.ApiClient.request(`/api/contact/${id}`, { method: 'DELETE' });
+        if (window.Toast) window.Toast.show('Dihapus ✅', 'success');
+      } catch(e) { console.error(e); }
       renderInbox();
+      refreshInboxBadges();
     });
   });
 }
@@ -1054,16 +1079,18 @@ function initInboxPanel() {
     renderInbox();
   });
 
-  if (clearBtn) clearBtn.addEventListener('click', () => {
+  if (clearBtn) clearBtn.addEventListener('click', async () => {
     const label = inboxActiveTab === 'press' ? 'semua press release' : 'semua pesan';
     if (!confirm(`Hapus ${label}? Tindakan ini tidak bisa dibatalkan.`)) return;
-    if (inboxActiveTab === 'press') {
-      localStorage.removeItem('bk_press_releases');
-    } else {
-      localStorage.removeItem('bk_contacts');
+    try {
+      const endpoint = inboxActiveTab === 'press' ? '/api/press' : '/api/contact';
+      await window.ApiClient.request(endpoint, { method: 'DELETE' });
+      if (window.Toast) window.Toast.show(`${label} dihapus`, 'success');
+    } catch(e) {
+      if (window.Toast) window.Toast.show('Gagal hapus: ' + (e.message||''), 'error');
     }
-    updateStats(window.NewsStore.getAll());
     renderInbox();
+    refreshInboxBadges();
   });
 
   // Stat card shortcuts
@@ -1083,4 +1110,272 @@ function initInboxPanel() {
   renderInbox();
 }
 
-document.addEventListener('DOMContentLoaded', init);
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   KELOLA IKLAN — Admin Ads Panel
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+const AD_SLOTS = [
+  { slot: 'banner-header',  label: 'Banner Header',  w: 728, h: 90,  icon: '🖼️', color: '#3b82f6' },
+  { slot: 'sidebar-square', label: 'Sidebar Square', w: 300, h: 300, icon: '📐', color: '#059669' },
+];
+
+let _adsData = { 'banner-header': [], 'sidebar-square': [] };
+let _newAdImages = { 'banner-header': '', 'sidebar-square': '' };
+
+async function loadAds() {
+  const grid = document.querySelector('#adsGrid');
+  if (!grid) return;
+
+  const cfg = window.SITE_CONFIG || {};
+  const useBackend = cfg.USE_BACKEND_AUTH === true;
+  if (!useBackend) {
+    grid.innerHTML = `<div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--muted);font-size:13px">⚠ Fitur iklan memerlukan backend server yang aktif.</div>`;
+    return;
+  }
+
+  try {
+    const data = await window.ApiClient.request('/api/ads');
+    _adsData = { 'banner-header': [], 'sidebar-square': [] };
+    (data.items || []).forEach(a => {
+      if (!_adsData[a.slot]) _adsData[a.slot] = [];
+      _adsData[a.slot].push(a);
+    });
+    renderAdsPanel();
+  } catch (e) {
+    grid.innerHTML = `<div style="grid-column:1/-1;padding:24px;text-align:center;color:var(--accent);font-size:13px">❌ Gagal memuat data iklan: ${e.message}</div>`;
+  }
+}
+
+function renderAdsPanel() {
+  const grid = document.querySelector('#adsGrid');
+  if (!grid) return;
+
+  grid.innerHTML = AD_SLOTS.map(slot => {
+    const ads = _adsData[slot.slot] || [];
+    const tempImg = _newAdImages[slot.slot];
+    
+    // Render list of existing ads
+    let adsListHtml = '';
+    if (ads.length === 0) {
+      adsListHtml = `<div style="text-align:center;padding:12px;font-size:12px;color:var(--muted)">Belum ada iklan di slot ini.</div>`;
+    } else {
+      adsListHtml = ads.map(ad => {
+        const isActive = !!ad.active;
+        return `
+          <div class="adItem" data-id="${ad.id}" style="display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px;background:#f8fafc">
+            <img src="${ad.image}" alt="Ad" style="width:48px;height:48px;object-fit:cover;border-radius:8px;background:#000;border:1px solid var(--line)" />
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+              <input type="url" class="fInput adItem-link" data-id="${ad.id}" placeholder="https://contoh.com/promo" value="${escHtml(ad.link || '')}" style="font-size:11.5px;padding:6px 10px;height:28px" />
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <label style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--text);cursor:pointer">
+                  <input type="checkbox" class="adItem-active" data-id="${ad.id}" ${isActive ? 'checked' : ''} />
+                  Aktif
+                </label>
+                <span style="font-size:9.5px;color:var(--muted)">${new Date(ad.updated_at).toLocaleDateString('id-ID')}</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <button class="adItem-save-btn" data-id="${ad.id}" data-slot="${slot.slot}" title="Simpan perubahan" style="padding:6px 8px;font-size:11px;background:#3b82f6;color:#fff;border:none;border-radius:6px;cursor:pointer">💾</button>
+              <button class="adItem-del-btn" data-id="${ad.id}" data-slot="${slot.slot}" title="Hapus iklan" style="padding:6px 8px;font-size:11px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer">🗑</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    return `
+      <div class="adCard" id="adCard-${slot.slot}" style="border:1.5px solid var(--line);border-radius:16px;background:#fff;overflow:hidden;box-shadow:var(--shadow-sm)">
+        
+        <!-- Card Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);background:#fafbfd">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:10px;background:${slot.color}22;display:grid;place-items:center;font-size:18px">${slot.icon}</div>
+            <div>
+              <div style="font-size:13.5px;font-weight:800;color:var(--text)">${slot.label}</div>
+              <div style="font-size:11px;color:var(--muted);font-weight:500">${slot.w} × ${slot.h} px</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ads list container -->
+        <div style="padding:14px 18px;border-bottom:1px solid var(--line);background:#fff">
+          <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:10px">📋 Daftar Iklan Aktif (${ads.length})</div>
+          <div style="display:flex;flex-direction:column;gap:10px;max-height:280px;overflow-y:auto;padding-right:4px">
+            ${adsListHtml}
+          </div>
+        </div>
+
+        <!-- Add New Ad section -->
+        <div style="padding:14px 18px;background:#fafbfd">
+          <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:10px">➕ Tambah Iklan Baru</div>
+          
+          <div class="adDropZone" id="adDrop-${slot.slot}"
+               style="border:2px dashed ${tempImg ? '#86efac' : 'var(--line)'};border-radius:12px;background:${tempImg ? '#000' : '#fff'};min-height:90px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;transition:border-color .18s,background .18s"
+               data-slot="${slot.slot}">
+            ${tempImg
+              ? `<img src="${tempImg}" alt="Preview" style="max-width:100%;max-height:80px;object-fit:contain;display:block;margin:auto" />`
+              : `<div style="text-align:center;padding:12px 10px;pointer-events:none">
+                  <div style="font-size:20px;margin-bottom:4px">🖼️</div>
+                  <div style="font-size:11.5px;font-weight:700;color:var(--text)">Klik atau drag gambar baru</div>
+                  <div style="font-size:10px;color:var(--muted)">JPG, PNG, WebP — maks. 4 MB</div>
+                </div>`
+            }
+          </div>
+          <input type="file" accept="image/*" id="adFile-${slot.slot}" style="display:none" data-slot="${slot.slot}" />
+
+          <div style="margin-top:10px">
+            <label style="font-size:10.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px">URL Tujuan</label>
+            <input type="url" id="adNewLink-${slot.slot}" class="fInput" placeholder="https://contoh.com/promo" style="font-size:12px;padding:8px 10px;height:34px" />
+          </div>
+
+          <div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--text);cursor:pointer">
+              <input type="checkbox" id="adNewActive-${slot.slot}" checked />
+              Aktifkan langsung
+            </label>
+            <button class="btnSave adAddBtn" data-slot="${slot.slot}" style="padding:8px 14px;font-size:11.5px;height:34px">💾 Tambah</button>
+          </div>
+        </div>
+
+        <!-- Hint -->
+        <div id="adHint-${slot.slot}" class="formHintMsg" style="margin:0 18px 14px;display:none"></div>
+      </div>
+    `;
+  }).join('');
+
+  /* ── Wire events ── */
+  AD_SLOTS.forEach(slot => {
+    const dropZone = document.querySelector(`#adDrop-${slot.slot}`);
+    const fileInput = document.querySelector(`#adFile-${slot.slot}`);
+    const addBtn    = document.querySelector(`.adAddBtn[data-slot="${slot.slot}"]`);
+
+    /* Upload via click */
+    dropZone?.addEventListener('click', () => fileInput?.click());
+    dropZone?.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = '#dc2626'; });
+    dropZone?.addEventListener('dragleave', () => dropZone.style.borderColor = (_newAdImages[slot.slot] ? '#86efac' : 'var(--line)') );
+    dropZone?.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.style.borderColor = (_newAdImages[slot.slot] ? '#86efac' : 'var(--line)');
+      const file = e.dataTransfer.files?.[0];
+      if (file) processAdFile(slot.slot, file);
+    });
+    fileInput?.addEventListener('change', () => {
+      if (fileInput.files?.[0]) processAdFile(slot.slot, fileInput.files[0]);
+      fileInput.value = '';
+    });
+
+    /* Add new ad */
+    addBtn?.addEventListener('click', () => addNewAd(slot.slot));
+  });
+
+  // Wire list items (Save & Delete for existing ads)
+  const gridEl = document.querySelector('#adsGrid');
+  gridEl?.querySelectorAll('.adItem-save-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const slot = btn.dataset.slot;
+      saveAdItem(id, slot);
+    });
+  });
+
+  gridEl?.querySelectorAll('.adItem-del-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const slot = btn.dataset.slot;
+      deleteAdItem(id, slot);
+    });
+  });
+}
+
+function processAdFile(slotName, file) {
+  if (!file.type.startsWith('image/')) {
+    showAdHint(slotName, '⚠ File harus berupa gambar.', 'error'); return;
+  }
+  if (file.size > 4 * 1024 * 1024) {
+    showAdHint(slotName, '⚠ Ukuran gambar maksimal 4 MB.', 'error'); return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    _newAdImages[slotName] = e.target.result;
+    renderAdsPanel();
+    showAdHint(slotName, '✅ Gambar baru siap — klik Tambah untuk menyimpan.', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+async function addNewAd(slotName) {
+  const image = _newAdImages[slotName];
+  if (!image) {
+    showAdHint(slotName, '⚠ Harap pilih/unggah gambar terlebih dahulu!', 'error');
+    return;
+  }
+
+  const linkInput   = document.querySelector(`#adNewLink-${slotName}`);
+  const activeCheck = document.querySelector(`#adNewActive-${slotName}`);
+  const addBtn      = document.querySelector(`.adAddBtn[data-slot="${slotName}"]`);
+
+  const link = linkInput?.value.trim() || '';
+  const active = activeCheck?.checked || false;
+
+  if (addBtn) { addBtn.disabled = true; addBtn.textContent = '⏳ Menambahkan...'; }
+
+  try {
+    await window.ApiClient.request('/api/ads', {
+      method: 'POST',
+      body: JSON.stringify({ slot: slotName, image, link, active })
+    });
+    
+    // Clear form
+    _newAdImages[slotName] = '';
+    
+    showAdHint(slotName, '✅ Iklan baru berhasil ditambahkan!', 'success');
+    await loadAds(); // Reload data & render
+  } catch (e) {
+    showAdHint(slotName, `❌ Gagal menambahkan: ${e.message}`, 'error');
+    if (addBtn) { addBtn.disabled = false; addBtn.textContent = '💾 Tambah'; }
+  }
+}
+
+async function saveAdItem(id, slotName) {
+  const linkInput = document.querySelector(`.adItem-link[data-id="${id}"]`);
+  const activeCheck = document.querySelector(`.adItem-active[data-id="${id}"]`);
+
+  const link = linkInput?.value.trim() || '';
+  const active = activeCheck?.checked || false;
+
+  try {
+    await window.ApiClient.request(`/api/ads/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ link, active })
+    });
+    showAdHint(slotName, '✅ Perubahan iklan berhasil disimpan!', 'success');
+    await loadAds();
+  } catch (e) {
+    showAdHint(slotName, `❌ Gagal menyimpan: ${e.message}`, 'error');
+  }
+}
+
+async function deleteAdItem(id, slotName) {
+  if (!confirm('Hapus iklan ini secara permanen?')) return;
+  try {
+    await window.ApiClient.request(`/api/ads/${id}`, { method: 'DELETE' });
+    showAdHint(slotName, '✅ Iklan berhasil dihapus!', 'success');
+    await loadAds();
+  } catch (e) {
+    showAdHint(slotName, `❌ Gagal menghapus: ${e.message}`, 'error');
+  }
+}
+
+function showAdHint(slotName, msg, type) {
+  const el = document.querySelector(`#adHint-${slotName}`);
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'formHintMsg ' + (type || '');
+  el.style.display = 'block';
+  setTimeout(() => { if (el.textContent === msg) { el.style.display = 'none'; } }, 4000);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  init();
+  loadAds();
+});

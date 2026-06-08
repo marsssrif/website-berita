@@ -57,6 +57,17 @@
         <input type="search" placeholder="Cari berita..." aria-label="Cari berita" id="headerSearch" autocomplete="off" />
       </div>
 
+      <!-- Mobile action buttons (hidden on desktop) -->
+      <div class="mobile-header-actions">
+        <button class="mobile-icon-btn" id="mobileSearchBtn" aria-label="Cari berita" title="Cari berita">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+        <a class="mobile-icon-btn" href="./bookmark.html" aria-label="Tersimpan" title="Berita Tersimpan">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          <span class="mobile-bk-badge" id="mobileBkBadge"></span>
+        </a>
+      </div>
+
     </div>
   </header>
 
@@ -65,6 +76,12 @@
     <div class="container nav__inner" id="navCats"></div>
   </nav>
 
+  <!-- Banner Iklan 728×90 -->
+  <div class="ad-banner-wrap">
+    <div class="container">
+      <div id="adBanner" class="ad-slot" aria-label="Iklan Banner"></div>
+    </div>
+  </div>
   <!-- Main Content -->
   <main class="container main">
 
@@ -115,7 +132,7 @@
       <div class="ad ad--sidebar" aria-label="Iklan">
         <div class="ad__box">
           <div class="ad__label">Advertisement</div>
-          <div class="ad__mock" style="height: 300px;">300 × 300</div>
+          <div id="adSidebar" class="ad-slot"></div>
         </div>
       </div>
     </aside>
@@ -189,9 +206,9 @@
       <div class="footer__bottom">
         <p class="footer__copy">© <span id="year"></span> Berita Krian. Seluruh hak cipta dilindungi undang-undang.</p>
         <div class="footer__bottom-links">
-          <a href="#">Syarat & Ketentuan</a>
-          <a href="#">Kebijakan Privasi</a>
-          <a href="#">Sitemap</a>
+          <a href="#" id="btnSyarat">Syarat &amp; Ketentuan</a>
+          <a href="#" id="btnPrivasi">Kebijakan Privasi</a>
+          <a href="#" id="btnSitemap">Sitemap</a>
         </div>
       </div>
     </div>
@@ -205,6 +222,7 @@
   <script src="./store.js"></script>
   <script src="./features.js"></script>
   <script src="./modals.js"></script>
+  <script src="./ads.js"></script>
   <script src="./app.js" defer></script>
 </body>
 </html>

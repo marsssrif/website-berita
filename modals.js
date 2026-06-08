@@ -12,26 +12,45 @@
 (function () {
   'use strict';
 
-  /* ── Storage helpers ── */
-  const PRESS_KEY   = 'bk_press_releases';
-  const CONTACT_KEY = 'bk_contacts';
-
-  function loadList(key)  { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } }
-  function saveList(key, list) { localStorage.setItem(key, JSON.stringify(list)); }
-
-  function addPressRelease(data) {
-    const list = loadList(PRESS_KEY);
-    list.unshift({ id: Date.now(), ts: new Date().toLocaleString('id-ID'), status: 'baru', ...data });
-    saveList(PRESS_KEY, list);
+  /* ── Storage helpers — sekarang pakai server API ── */
+  async function addPressRelease(data) {
+    try {
+      const res = await fetch('/api/press', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Gagal mengirim ke server');
+      }
+      return await res.json();
+    } catch (e) {
+      console.error('addPressRelease error:', e);
+      throw e;
+    }
   }
-  function addContact(data) {
-    const list = loadList(CONTACT_KEY);
-    list.unshift({ id: Date.now(), ts: new Date().toLocaleString('id-ID'), status: 'baru', ...data });
-    saveList(CONTACT_KEY, list);
+  async function addContact(data) {
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Gagal mengirim ke server');
+      }
+      return await res.json();
+    } catch (e) {
+      console.error('addContact error:', e);
+      throw e;
+    }
   }
 
-  window.PressStore   = { getAll: () => loadList(PRESS_KEY),   add: addPressRelease };
-  window.ContactStore = { getAll: () => loadList(CONTACT_KEY), add: addContact };
+  // Stub tetap ada untuk kompatibilitas admin.js lama
+  window.PressStore   = { getAll: () => [], add: addPressRelease };
+  window.ContactStore = { getAll: () => [], add: addContact };
 
   /* ── Photo store (in-memory while form open) ── */
   let pressPhotos   = []; // [{name, size, dataUrl}]
@@ -566,7 +585,7 @@
     ────────────────────────────────── */
     const pressForm = document.getElementById('pressForm');
     if (pressForm) {
-      pressForm.addEventListener('submit', e => {
+      pressForm.addEventListener('submit', async e => {
         e.preventDefault();
         const nama      = document.getElementById('prNama').value.trim();
         const org       = document.getElementById('prOrg').value.trim();
@@ -584,43 +603,50 @@
         if (isi.length < 20) { showToast('Isi press release terlalu singkat!', 'error'); scrollToField('prIsi'); return; }
         if (!setuju)   { showToast('Centang pernyataan persetujuan terlebih dahulu!', 'error'); return; }
 
-        addPressRelease({
-          nama, org, email,
-          telp:     document.getElementById('prTelp').value.trim(),
-          web:      document.getElementById('prWeb').value.trim(),
-          kategori,
-          tanggal:  document.getElementById('prTanggal').value,
-          judul, isi,
-          catatan:  document.getElementById('prCatatan').value.trim(),
-          photos:   pressPhotos.map(p => ({ name: p.name, size: p.size, dataUrl: p.dataUrl })),
-          photoCount: pressPhotos.length,
-        });
+        const submitBtn = document.getElementById('pressBtnSubmit');
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '⏳ Mengirim...'; }
 
-        // Reset
-        pressForm.reset();
-        pressPhotos = [];
-        document.getElementById('prPhotoGrid').innerHTML = '';
-        document.getElementById('prPhotoGrid').style.display = 'none';
-        document.getElementById('prPhotoHint').style.display = 'none';
-        document.getElementById('prDropInner').style.display = '';
-        document.getElementById('prProgressFill').style.width = '0%';
-        document.getElementById('prProgressLabel').textContent = '0% terisi';
-        counters.forEach(([fid, cid, max]) => {
-          const c = document.getElementById(cid);
-          if (c) c.textContent = `0 / ${max} karakter`;
-        });
+        try {
+          await addPressRelease({
+            nama, org, email,
+            telp:     document.getElementById('prTelp').value.trim(),
+            web:      document.getElementById('prWeb').value.trim(),
+            kategori,
+            tanggal:  document.getElementById('prTanggal').value,
+            judul, isi,
+            catatan:  document.getElementById('prCatatan').value.trim(),
+            photos:   pressPhotos.map(p => ({ name: p.name, size: p.size, dataUrl: p.dataUrl })),
+          });
 
-        document.getElementById('successTitle').textContent = 'Press Release Terkirim! ✉';
-        document.getElementById('successMsg').textContent =
-          `Terima kasih, ${nama}! Press release "${judul}" berhasil diterima oleh redaksi Berita Krian.`;
-        document.getElementById('successDetails').innerHTML = `
-          <div class="success-detail-row"><span>📰 Kategori</span><strong>${kategori}</strong></div>
-          <div class="success-detail-row"><span>🏢 Organisasi</span><strong>${org}</strong></div>
-          <div class="success-detail-row"><span>📧 Email konfirmasi</span><strong>${email}</strong></div>
-          ${pressPhotos.length > 0 ? `<div class="success-detail-row"><span>📸 Foto</span><strong>${pressPhotos.length} foto terlampir</strong></div>` : ''}
-          <div class="success-note">Tim redaksi akan menghubungi Anda dalam 1–3 hari kerja.</div>
-        `;
-        showPanel('successPanel');
+          // Reset
+          pressForm.reset();
+          pressPhotos = [];
+          document.getElementById('prPhotoGrid').innerHTML = '';
+          document.getElementById('prPhotoGrid').style.display = 'none';
+          document.getElementById('prPhotoHint').style.display = 'none';
+          document.getElementById('prDropInner').style.display = '';
+          document.getElementById('prProgressFill').style.width = '0%';
+          document.getElementById('prProgressLabel').textContent = '0% terisi';
+          counters.forEach(([fid, cid, max]) => {
+            const c = document.getElementById(cid);
+            if (c) c.textContent = `0 / ${max} karakter`;
+          });
+
+          document.getElementById('successTitle').textContent = 'Press Release Terkirim! ✉';
+          document.getElementById('successMsg').textContent =
+            `Terima kasih, ${nama}! Press release "${judul}" berhasil diterima oleh redaksi Berita Krian.`;
+          document.getElementById('successDetails').innerHTML = `
+            <div class="success-detail-row"><span>📰 Kategori</span><strong>${kategori}</strong></div>
+            <div class="success-detail-row"><span>🏢 Organisasi</span><strong>${org}</strong></div>
+            <div class="success-detail-row"><span>📧 Email konfirmasi</span><strong>${email}</strong></div>
+            <div class="success-note">Tim redaksi akan menghubungi Anda dalam 1–3 hari kerja.</div>
+          `;
+          showPanel('successPanel');
+        } catch (err) {
+          showToast('Gagal mengirim: ' + (err.message || 'Server error'), 'error');
+        } finally {
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<span class="btn-icon">✉</span> Kirim Press Release'; }
+        }
       });
     }
 
@@ -629,7 +655,7 @@
     ────────────────────────────────── */
     const contactForm = document.getElementById('contactForm');
     if (contactForm) {
-      contactForm.addEventListener('submit', e => {
+      contactForm.addEventListener('submit', async e => {
         e.preventDefault();
         const nama   = document.getElementById('ctNama').value.trim();
         const email  = document.getElementById('ctEmail').value.trim();
@@ -641,32 +667,41 @@
         if (!subjek) { showToast('Pilih topik pesan!', 'error'); return; }
         if (pesan.length < 5) { showToast('Pesan terlalu singkat!', 'error'); return; }
 
-        addContact({
-          nama, email,
-          telp:   document.getElementById('ctTelp').value.trim(),
-          subjek, pesan,
-          screenshot: contactPhoto ? { name: contactPhoto.name, size: contactPhoto.size, dataUrl: contactPhoto.dataUrl } : null,
-        });
+        const submitBtn = contactForm.querySelector('[type="submit"]');
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '⏳ Mengirim...'; }
 
-        // Reset
-        contactForm.reset();
-        contactPhoto = null;
-        const ci = document.getElementById('ctDropInner');
-        const cp = document.getElementById('ctPreviewWrap');
-        if (ci) ci.style.display = '';
-        if (cp) cp.style.display = 'none';
-        const ctCnt = document.getElementById('ctPesanCount');
-        if (ctCnt) ctCnt.textContent = '0 / 2000 karakter';
+        try {
+          await addContact({
+            nama, email,
+            telp:   document.getElementById('ctTelp').value.trim(),
+            subjek, pesan,
+            screenshot: contactPhoto ? { name: contactPhoto.name, size: contactPhoto.size, dataUrl: contactPhoto.dataUrl } : null,
+          });
 
-        document.getElementById('successTitle').textContent = 'Pesan Terkirim! 📨';
-        document.getElementById('successMsg').textContent =
-          `Terima kasih, ${nama}! Pesan Anda tentang "${subjek}" telah kami terima.`;
-        document.getElementById('successDetails').innerHTML = `
-          <div class="success-detail-row"><span>📧 Balasan ke</span><strong>${email}</strong></div>
-          <div class="success-detail-row"><span>📌 Topik</span><strong>${subjek}</strong></div>
-          <div class="success-note">Kami akan membalas dalam 1×24 jam kerja.</div>
-        `;
-        showPanel('successPanel');
+          // Reset
+          contactForm.reset();
+          contactPhoto = null;
+          const ci = document.getElementById('ctDropInner');
+          const cp = document.getElementById('ctPreviewWrap');
+          if (ci) ci.style.display = '';
+          if (cp) cp.style.display = 'none';
+          const ctCnt = document.getElementById('ctPesanCount');
+          if (ctCnt) ctCnt.textContent = '0 / 2000 karakter';
+
+          document.getElementById('successTitle').textContent = 'Pesan Terkirim! 📨';
+          document.getElementById('successMsg').textContent =
+            `Terima kasih, ${nama}! Pesan Anda tentang "${subjek}" telah kami terima.`;
+          document.getElementById('successDetails').innerHTML = `
+            <div class="success-detail-row"><span>📧 Balasan ke</span><strong>${email}</strong></div>
+            <div class="success-detail-row"><span>📌 Topik</span><strong>${subjek}</strong></div>
+            <div class="success-note">Kami akan membalas dalam 1×24 jam kerja.</div>
+          `;
+          showPanel('successPanel');
+        } catch (err) {
+          showToast('Gagal mengirim: ' + (err.message || 'Server error'), 'error');
+        } finally {
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<span class="btn-icon">📨</span> Kirim Pesan'; }
+        }
       });
     }
 
@@ -713,6 +748,438 @@
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
+  }
+
+})();
+
+/* ============================================================
+   INFO MODALS — Syarat & Ketentuan | Kebijakan Privasi | Sitemap
+   ============================================================ */
+(function () {
+  'use strict';
+
+  /* ── Konten setiap modal ── */
+  const MODALS = {
+    tentang: {
+      title: '🏢 Tentang Kami',
+      content: `
+        <div class="im-about-hero">
+          <div class="im-about-logo">BK</div>
+          <div>
+            <div class="im-about-name">BERITA <span>KRIAN</span></div>
+            <div class="im-about-tagline">Portal Berita Krian Terpercaya</div>
+          </div>
+        </div>
+        <p>Berita Krian adalah portal berita digital yang didedikasikan untuk menyajikan informasi terkini, akurat, dan berimbang seputar Krian dan wilayah Sidoarjo. Kami hadir sebagai jembatan informasi antara pemerintah, masyarakat, dan dunia usaha di kawasan Krian.</p>
+
+        <div class="im-section">
+          <h3>Visi Kami</h3>
+          <p>Menjadi portal berita digital terdepan di Krian yang dipercaya oleh masyarakat sebagai sumber informasi yang akurat, cepat, dan bertanggung jawab.</p>
+        </div>
+
+        <div class="im-section">
+          <h3>Misi Kami</h3>
+          <ul class="im-list">
+            <li>Menyajikan berita lokal Krian secara cepat, akurat, dan berimbang setiap hari.</li>
+            <li>Menjadi wadah aspirasi masyarakat Krian kepada pemerintah dan pemangku kepentingan.</li>
+            <li>Mendukung perkembangan ekonomi dan sosial daerah melalui pemberitaan yang konstruktif.</li>
+            <li>Mengedukasi masyarakat tentang isu-isu penting di tingkat lokal, nasional, dan internasional.</li>
+          </ul>
+        </div>
+
+        <div class="im-section">
+          <h3>Profil Singkat</h3>
+          <ul class="im-list">
+            <li><strong>Didirikan:</strong> 2020</li>
+            <li><strong>Kantor:</strong> Jl. Raya Krian No. 1, Sidoarjo, Jawa Timur</li>
+            <li><strong>Email:</strong> redaksi@beritakrian.com</li>
+            <li><strong>Telepon:</strong> (031) 123-4567</li>
+          </ul>
+        </div>
+      `
+    },
+    redaksi: {
+      title: '✍️ Redaksi',
+      content: `
+        <p>Tim redaksi Berita Krian terdiri dari jurnalis berpengalaman yang berkomitmen menjaga standar jurnalistik tertinggi dalam setiap pemberitaan.</p>
+
+        <div class="im-team-grid">
+          <div class="im-team-card">
+            <div class="im-team-avatar" style="background:linear-gradient(135deg,#dc2626,#b91c1c)">AH</div>
+            <div class="im-team-name">Ahmad Hidayat</div>
+            <div class="im-team-role">Pemimpin Redaksi</div>
+          </div>
+          <div class="im-team-card">
+            <div class="im-team-avatar" style="background:linear-gradient(135deg,#2563eb,#1d4ed8)">SR</div>
+            <div class="im-team-name">Sari Rahayu</div>
+            <div class="im-team-role">Redaktur Pelaksana</div>
+          </div>
+          <div class="im-team-card">
+            <div class="im-team-avatar" style="background:linear-gradient(135deg,#059669,#047857)">BP</div>
+            <div class="im-team-name">Budi Prasetyo</div>
+            <div class="im-team-role">Redaktur Ekonomi</div>
+          </div>
+          <div class="im-team-card">
+            <div class="im-team-avatar" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)">DW</div>
+            <div class="im-team-name">Dewi Wulandari</div>
+            <div class="im-team-role">Redaktur Sosial & Budaya</div>
+          </div>
+          <div class="im-team-card">
+            <div class="im-team-avatar" style="background:linear-gradient(135deg,#d97706,#b45309)">MF</div>
+            <div class="im-team-name">Muhammad Fauzi</div>
+            <div class="im-team-role">Reporter Lapangan</div>
+          </div>
+          <div class="im-team-card">
+            <div class="im-team-avatar" style="background:linear-gradient(135deg,#0891b2,#0e7490)">RA</div>
+            <div class="im-team-name">Rina Astuti</div>
+            <div class="im-team-role">Reporter & Fotografer</div>
+          </div>
+        </div>
+
+        <div class="im-section" style="margin-top:20px">
+          <h3>Kirim Koreksi atau Masukan</h3>
+          <p>Jika Anda menemukan kesalahan dalam pemberitaan kami, silakan hubungi tim redaksi melalui email <strong>redaksi@beritakrian.com</strong> atau klik tombol Hubungi Kami di bawah.</p>
+        </div>
+        <div class="im-update">Seluruh wartawan Berita Krian telah memiliki Kartu Pers dan tunduk pada Kode Etik Jurnalistik PWI</div>
+      `
+    },
+    pedoman: {
+      title: '📖 Pedoman Media',
+      content: `
+        <p>Berita Krian beroperasi berdasarkan prinsip-prinsip jurnalistik yang bertanggung jawab dan mematuhi seluruh regulasi pers yang berlaku di Indonesia.</p>
+
+        <div class="im-section">
+          <h3>Standar Editorial</h3>
+          <ul class="im-list">
+            <li><strong>Akurasi:</strong> Setiap berita diverifikasi dari minimal dua sumber sebelum dipublikasikan.</li>
+            <li><strong>Keberimbangan:</strong> Setiap isu disajikan dari berbagai sudut pandang yang relevan.</li>
+            <li><strong>Independensi:</strong> Pemberitaan bebas dari pengaruh kepentingan politik maupun bisnis.</li>
+            <li><strong>Kemanusiaan:</strong> Pemberitaan mempertimbangkan dampak terhadap individu dan masyarakat.</li>
+          </ul>
+        </div>
+
+        <div class="im-section">
+          <h3>Hak Jawab & Koreksi</h3>
+          <p>Berita Krian menghormati hak jawab setiap pihak yang merasa dirugikan oleh pemberitaan kami. Koreksi akan dipublikasikan dalam waktu 1×24 jam setelah terbukti adanya kesalahan fakta.</p>
+        </div>
+
+        <div class="im-section">
+          <h3>Regulasi yang Dipatuhi</h3>
+          <ul class="im-list">
+            <li>UU No. 40 Tahun 1999 tentang Pers</li>
+            <li>Kode Etik Jurnalistik Dewan Pers Indonesia</li>
+            <li>UU No. 19 Tahun 2016 tentang ITE</li>
+            <li>Pedoman Pemberitaan Media Siber Dewan Pers</li>
+          </ul>
+        </div>
+
+        <div class="im-section">
+          <h3>Penanganan Aduan</h3>
+          <p>Aduan terkait pemberitaan dapat disampaikan melalui email <strong>redaksi@beritakrian.com</strong>. Setiap aduan akan direspons dalam 3×24 jam kerja.</p>
+        </div>
+
+        <div class="im-update">Berita Krian terdaftar di Dewan Pers Indonesia</div>
+      `
+    },
+    iklan: {
+      title: '📢 Pasang Iklan',
+      content: `
+        <p>Jangkau ribuan pembaca setia Berita Krian setiap harinya. Kami menawarkan berbagai paket iklan yang fleksibel dan terjangkau untuk kebutuhan promosi bisnis Anda.</p>
+
+        <div class="im-adpack-list">
+          <div class="im-adpack-row">
+            <div class="im-adpack-left">
+              <div class="im-adpack-badge-icon" style="background:linear-gradient(135deg,#3b82f6,#2563eb)">🖼️</div>
+              <div class="im-adpack-info">
+                <div class="im-adpack-name">Banner Header</div>
+                <div class="im-adpack-desc">Tampil di bagian atas halaman utama · <span>728 × 90 px</span></div>
+              </div>
+            </div>
+            <div class="im-adpack-price">Rp 500.000<span>/minggu</span></div>
+          </div>
+
+          <div class="im-adpack-row">
+            <div class="im-adpack-left">
+              <div class="im-adpack-badge-icon" style="background:linear-gradient(135deg,#059669,#047857)">📐</div>
+              <div class="im-adpack-info">
+                <div class="im-adpack-name">Sidebar Square</div>
+                <div class="im-adpack-desc">Tampil di sidebar kanan semua halaman · <span>300 × 300 px</span></div>
+              </div>
+            </div>
+            <div class="im-adpack-price">Rp 350.000<span>/minggu</span></div>
+          </div>
+
+          <div class="im-adpack-row">
+            <div class="im-adpack-left">
+              <div class="im-adpack-badge-icon" style="background:linear-gradient(135deg,#d97706,#b45309)">📰</div>
+              <div class="im-adpack-info">
+                <div class="im-adpack-name">Native Article</div>
+                <div class="im-adpack-desc">Artikel sponsor yang tampil di feed berita · <span>1 artikel</span></div>
+              </div>
+            </div>
+            <div class="im-adpack-price">Rp 750.000<span>/artikel</span></div>
+          </div>
+
+          <div class="im-adpack-row im-adpack-row--featured">
+            <div class="im-adpack-popular">⭐ Terpopuler</div>
+            <div class="im-adpack-left">
+              <div class="im-adpack-badge-icon" style="background:linear-gradient(135deg,#dc2626,#b91c1c)">🏆</div>
+              <div class="im-adpack-info">
+                <div class="im-adpack-name">Premium Package</div>
+                <div class="im-adpack-desc">Semua posisi iklan + desain banner gratis · <span>All Placement</span></div>
+              </div>
+            </div>
+            <div class="im-adpack-price">Rp 2.000.000<span>/bulan</span></div>
+          </div>
+        </div>
+
+        <div class="im-section">
+          <h3>Keunggulan Beriklan di Berita Krian</h3>
+          <ul class="im-list">
+            <li>Rata-rata <strong>10.000+ pengunjung unik</strong> per hari dari wilayah Krian &amp; Sidoarjo.</li>
+            <li>Audiens tertarget: warga lokal, pelaku usaha, dan pengambil keputusan daerah.</li>
+            <li>Laporan performa iklan transparan setiap minggu.</li>
+            <li>Desain banner gratis untuk paket Premium.</li>
+          </ul>
+        </div>
+
+        <div class="im-section">
+          <h3>Cara Pasang Iklan</h3>
+          <p>Hubungi tim pemasaran kami melalui email <strong>iklan@beritakrian.com</strong> atau telepon <strong>(031) 123-4567</strong> untuk konsultasi gratis dan penawaran spesial.</p>
+        </div>
+      `
+    },
+
+    syarat: {
+      title: '📋 Syarat &amp; Ketentuan',
+      icon: '📋',
+      content: `
+        <p>Selamat datang di <strong>Berita Krian</strong>. Dengan mengakses dan menggunakan website ini, Anda dianggap telah membaca, memahami, dan menyetujui Syarat &amp; Ketentuan berikut.</p>
+
+        <div class="im-section">
+          <h3>1. Penggunaan Konten</h3>
+          <p>Seluruh konten yang tersedia di Berita Krian — termasuk teks, foto, grafis, video, dan elemen lainnya — dilindungi oleh hak cipta. Pengguna diizinkan untuk membaca dan membagikan konten dengan menyertakan sumber asli secara jelas.</p>
+        </div>
+
+        <div class="im-section">
+          <h3>2. Larangan Penggunaan</h3>
+          <ul class="im-list">
+            <li>Menggandakan atau mendistribusikan ulang konten tanpa izin tertulis dari redaksi.</li>
+            <li>Menggunakan konten untuk kepentingan komersial tanpa perjanjian resmi.</li>
+            <li>Memodifikasi konten asli sehingga menyesatkan pembaca.</li>
+            <li>Melakukan scraping otomatis terhadap website ini tanpa izin.</li>
+          </ul>
+        </div>
+
+        <div class="im-section">
+          <h3>3. Komentar &amp; Interaksi</h3>
+          <p>Pengguna yang mengirimkan komentar atau press release bertanggung jawab penuh atas konten yang dikirimkan. Berita Krian berhak menghapus konten yang mengandung unsur SARA, hoaks, atau melanggar hukum yang berlaku di Indonesia.</p>
+        </div>
+
+        <div class="im-section">
+          <h3>4. Perubahan Ketentuan</h3>
+          <p>Berita Krian berhak mengubah Syarat &amp; Ketentuan ini sewaktu-waktu. Perubahan akan diumumkan melalui website dan berlaku sejak tanggal publikasi.</p>
+        </div>
+
+        <div class="im-section">
+          <h3>5. Hukum yang Berlaku</h3>
+          <p>Syarat &amp; Ketentuan ini diatur oleh dan ditafsirkan sesuai dengan hukum Republik Indonesia, termasuk Undang-Undang No. 19 Tahun 2016 tentang Informasi dan Transaksi Elektronik (ITE).</p>
+        </div>
+
+        <div class="im-update">Terakhir diperbarui: 1 Januari 2025</div>
+      `
+    },
+    privasi: {
+      title: '🔒 Kebijakan Privasi',
+      icon: '🔒',
+      content: `
+        <p>Berita Krian berkomitmen untuk melindungi privasi dan keamanan data pribadi Anda. Kebijakan ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan menjaga informasi Anda.</p>
+
+        <div class="im-section">
+          <h3>1. Data yang Kami Kumpulkan</h3>
+          <ul class="im-list">
+            <li><strong>Data yang Anda berikan:</strong> Nama, email, nomor telepon saat mengirim press release atau menghubungi kami.</li>
+            <li><strong>Data otomatis:</strong> Alamat IP, jenis browser, halaman yang dikunjungi, dan durasi kunjungan melalui cookies.</li>
+            <li><strong>Data analitik:</strong> Informasi agregat tentang penggunaan website untuk keperluan peningkatan layanan.</li>
+          </ul>
+        </div>
+
+        <div class="im-section">
+          <h3>2. Penggunaan Data</h3>
+          <p>Data yang dikumpulkan digunakan untuk:</p>
+          <ul class="im-list">
+            <li>Memproses dan merespons pesan serta press release yang Anda kirimkan.</li>
+            <li>Meningkatkan kualitas konten dan pengalaman pengguna website.</li>
+            <li>Menganalisis tren pembaca untuk keperluan editorial.</li>
+            <li>Mencegah penyalahgunaan dan aktivitas penipuan.</li>
+          </ul>
+        </div>
+
+        <div class="im-section">
+          <h3>3. Keamanan Data</h3>
+          <p>Kami menerapkan langkah-langkah keamanan teknis dan organisasi yang sesuai untuk melindungi data Anda dari akses tidak sah, pengungkapan, perubahan, atau penghancuran.</p>
+        </div>
+
+        <div class="im-section">
+          <h3>4. Berbagi Data dengan Pihak Ketiga</h3>
+          <p>Berita Krian <strong>tidak menjual</strong> data pribadi Anda kepada pihak ketiga. Data hanya dibagikan kepada mitra terpercaya yang membantu operasional website (seperti layanan analitik) dengan perjanjian kerahasiaan yang ketat.</p>
+        </div>
+
+        <div class="im-section">
+          <h3>5. Hak Anda</h3>
+          <p>Anda berhak untuk meminta akses, koreksi, atau penghapusan data pribadi Anda. Hubungi kami di <strong>redaksi@beritakrian.com</strong> untuk mengajukan permintaan tersebut.</p>
+        </div>
+
+        <div class="im-update">Terakhir diperbarui: 1 Januari 2025</div>
+      `
+    },
+    sitemap: {
+      title: '🗺️ Sitemap',
+      icon: '🗺️',
+      content: `
+        <p>Temukan semua halaman dan rubrik yang tersedia di portal Berita Krian.</p>
+
+        <div class="im-sitemap-grid">
+          <div class="im-sitemap-col">
+            <h3>📰 Rubrik Utama</h3>
+            <ul class="im-sitemap-list">
+              <li><a href="./kategori.html?cat=berita-utama">🔴 Berita Utama</a></li>
+              <li><a href="./kategori.html?cat=nasional">🇮🇩 Nasional</a></li>
+              <li><a href="./kategori.html?cat=internasional">🌏 Internasional</a></li>
+              <li><a href="./kategori.html?cat=ekonomi-bisnis">💼 Ekonomi &amp; Bisnis</a></li>
+              <li><a href="./kategori.html?cat=teknologi">💻 Teknologi</a></li>
+              <li><a href="./kategori.html?cat=olahraga">⚽ Olahraga</a></li>
+              <li><a href="./kategori.html?cat=hiburan">🎬 Hiburan</a></li>
+              <li><a href="./kategori.html?cat=gaya-hidup">✨ Gaya Hidup</a></li>
+            </ul>
+          </div>
+
+          <div class="im-sitemap-col">
+            <h3>🔗 Halaman Penting</h3>
+            <ul class="im-sitemap-list">
+              <li><a href="./index.html">🏠 Beranda</a></li>
+              <li><a href="./bookmark.html">🔖 Berita Tersimpan</a></li>
+              <li><a href="./admin.html">⚙️ Dashboard Admin</a></li>
+            </ul>
+
+            <h3 style="margin-top:20px">✉️ Layanan</h3>
+            <ul class="im-sitemap-list">
+              <li><a href="#" onclick="window.Modals&&window.Modals.openPress();return false;">📨 Kirim Press Release</a></li>
+              <li><a href="#" onclick="window.Modals&&window.Modals.openContact();return false;">☎️ Hubungi Kami</a></li>
+            </ul>
+
+            <h3 style="margin-top:20px">📄 Legal</h3>
+            <ul class="im-sitemap-list">
+              <li><a href="#" onclick="InfoModal.open('syarat');return false;">📋 Syarat &amp; Ketentuan</a></li>
+              <li><a href="#" onclick="InfoModal.open('privasi');return false;">🔒 Kebijakan Privasi</a></li>
+            </ul>
+          </div>
+        </div>
+      `
+    }
+  };
+
+  /* ── Build HTML ── */
+  function buildInfoModal() {
+    return `
+    <div id="infoModalOverlay" class="im-overlay" hidden>
+      <div class="im-box" id="imBox" role="dialog" aria-modal="true">
+        <div class="im-header" id="imHeader">
+          <div class="im-header-text" id="imTitle"></div>
+          <button class="im-close" id="imClose" aria-label="Tutup">✕</button>
+        </div>
+        <div class="im-body" id="imBody"></div>
+      </div>
+    </div>`;
+  }
+
+  /* ── Inject ── */
+  function injectInfoModal() {
+    if (document.getElementById('infoModalOverlay')) return;
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = buildInfoModal();
+    document.body.appendChild(wrapper.firstElementChild);
+  }
+
+  /* ── Open / Close ── */
+  function openInfoModal(key) {
+    const data = MODALS[key];
+    if (!data) return;
+    const overlay = document.getElementById('infoModalOverlay');
+    const title   = document.getElementById('imTitle');
+    const body    = document.getElementById('imBody');
+    if (!overlay || !title || !body) return;
+
+    title.innerHTML = data.title;
+    body.innerHTML  = data.content;
+
+    // Tutup link di dalam sitemap
+    body.querySelectorAll('a[href="#"]').forEach(a => {
+      a.addEventListener('click', e => { e.preventDefault(); });
+    });
+
+    overlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add('im-open')));
+  }
+
+  function closeInfoModal() {
+    const overlay = document.getElementById('infoModalOverlay');
+    if (!overlay) return;
+    overlay.classList.remove('im-open');
+    document.body.style.overflow = '';
+    setTimeout(() => { overlay.hidden = true; }, 300);
+  }
+
+  /* ── Wire ── */
+  function wireInfoModal() {
+    const overlay = document.getElementById('infoModalOverlay');
+    if (!overlay) return;
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeInfoModal(); });
+    document.getElementById('imClose').addEventListener('click', closeInfoModal);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !overlay.hidden) closeInfoModal(); });
+
+    /* Wire by ID (footer bottom links) */
+    const idMap = { btnSyarat: 'syarat', btnPrivasi: 'privasi', btnSitemap: 'sitemap' };
+    Object.entries(idMap).forEach(([id, key]) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('click', e => { e.preventDefault(); openInfoModal(key); });
+    });
+
+    /* Wire by text content (works on all pages) */
+    const textMap = [
+      ['tentang kami',       'tentang'],
+      ['redaksi',            'redaksi'],
+      ['pedoman media',      'pedoman'],
+      ['pasang iklan',       'iklan'],
+      ['kebijakan privasi',  'privasi'],
+      ['syarat & ketentuan', 'syarat'],
+      ['syarat &amp; ketentuan', 'syarat'],
+      ['sitemap',            'sitemap'],
+    ];
+    document.querySelectorAll('a[href="#"]').forEach(el => {
+      if (el.dataset.infoWired) return;
+      const txt = el.textContent.trim().toLowerCase();
+      const match = textMap.find(([keyword]) => txt === keyword);
+      if (match) {
+        el.dataset.infoWired = '1';
+        el.addEventListener('click', e => { e.preventDefault(); openInfoModal(match[1]); });
+      }
+    });
+  }
+
+  window.InfoModal = { open: openInfoModal, close: closeInfoModal };
+
+  function initInfoModals() {
+    injectInfoModal();
+    wireInfoModal();
+  }
+  window.initInfoModals = initInfoModals;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initInfoModals);
+  } else {
+    initInfoModals();
   }
 
 })();

@@ -63,7 +63,13 @@
     <div class="container nav__inner" id="navCats"></div>
   </nav>
 
-  <!-- Main -->
+  <!-- Banner Iklan 728×90 -->
+  <div class="ad-banner-wrap">
+    <div class="container">
+      <div id="adBanner" class="ad-slot" aria-label="Iklan Banner"></div>
+    </div>
+  </div>
+
   <main class="container main detailMain">
     <section class="detail">
       <div class="breadcrumb" id="breadcrumb"></div>
@@ -93,7 +99,7 @@
     <aside class="detailSide" aria-label="Iklan">
       <div class="ad__box">
         <div class="ad__label">Advertisement</div>
-        <div class="ad__mock">300 × 600</div>
+        <div id="adSidebar" class="ad-slot"></div>
       </div>
     </aside>
   </main>
@@ -172,6 +178,7 @@
   <script src="./store.js"></script>
   <script src="./features.js"></script>
   <script src="./modals.js"></script>
+  <script src="./ads.js"></script>
   <script src="./kategori.js" defer></script>
 </body>
 </html>
