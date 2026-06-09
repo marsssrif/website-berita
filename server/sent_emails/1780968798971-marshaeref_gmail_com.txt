@@ -1,0 +1,36 @@
+To: marshaeref@gmail.com
+Subject: [Berita Krian] Press Release Anda Tidak Dapat Dipublikasikan — TESSSSSSSSSS
+Date: 2026-06-09T01:33:18.971Z
+Reason: SMTP failed: connect ENETUNREACH 2404:6800:4003:c02::6c:465
+
+Yth. tes,
+
+Terima kasih telah mengirimkan press release kepada redaksi Berita Krian.
+
+Setelah melalui proses evaluasi, kami mohon maaf menginformasikan bahwa press release Anda TIDAK DAPAT kami publikasikan saat ini.
+
+━━━━━━━━━━━━━━━━━━━━
+📰 DETAIL PRESS RELEASE
+━━━━━━━━━━━━━━━━━━━━
+Judul    : TESSSSSSSSSS
+Kategori : Peluncuran Produk
+━━━━━━━━━━━━━━━━━━━━
+
+❌ STATUS: TIDAK DITERIMA
+
+Alasan:
+tes gagal
+
+Kami menyarankan Anda untuk:
+• Memastikan informasi yang disampaikan akurat dan dapat diverifikasi
+• Menyertakan narahubung yang dapat dihubungi
+• Mengirimkan kembali dengan kelengkapan data yang lebih baik
+
+Untuk diskusi lebih lanjut, silakan hubungi:
+📧 redaksi@beritakrian.com
+📞 (031) 123-4567
+
+Terima kasih atas pengertian Anda.
+
+Salam,
+Tim Redaksi Berita Krian

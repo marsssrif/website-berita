@@ -50,7 +50,7 @@
         img.alt = `Iklan ${label}`;
         img.width = w;
         img.height = h;
-        img.style.cssText = `display:block;width:100%;max-width:${w}px;height:${h}px;object-fit:cover;border-radius:8px;`;
+        img.style.cssText = `display:block;margin:0 auto;width:100%;max-width:${w}px;height:${h}px;object-fit:contain;background-color:#fafbfd;border-radius:8px;`;
         wrap.appendChild(img);
         el.appendChild(wrap);
         return;
@@ -59,7 +59,7 @@
       // 2. Jika ada lebih dari 1 iklan (Auto-slide)
       const slider = document.createElement('div');
       slider.className = 'ad-slider';
-      slider.style.cssText = `position:relative;width:100%;max-width:${w}px;height:${h}px;overflow:hidden;border-radius:8px;`;
+      slider.style.cssText = `position:relative;margin:0 auto;width:100%;max-width:${w}px;height:${h}px;overflow:hidden;border-radius:8px;`;
 
       const slidesWrap = document.createElement('div');
       slidesWrap.className = 'ad-slider__slides';
@@ -90,7 +90,7 @@
         const img = document.createElement('img');
         img.src = ad.image;
         img.alt = `Iklan ${label} ${idx + 1}`;
-        img.style.cssText = `display:block;width:100%;height:100%;object-fit:cover;border-radius:8px;`;
+        img.style.cssText = `display:block;width:100%;height:100%;object-fit:contain;background-color:#fafbfd;border-radius:8px;`;
 
         wrap.appendChild(img);
         slide.appendChild(wrap);
@@ -161,6 +161,29 @@
     try {
       const bannerEl = document.getElementById('adBanner');
       const sidebarEl = document.getElementById('adSidebar');
+
+      // Deteksi apakah ini halaman utama (index.html atau root)
+      const path = window.location.pathname;
+      const isHomepage = path.endsWith('/') || 
+                         path.endsWith('/index.html') || 
+                         path.split('/').pop() === '';
+
+      if (!isHomepage) {
+        // Jika bukan halaman utama, acak 50% kesempatan untuk memunculkan iklan
+        const showAds = Math.random() < 0.5;
+        if (!showAds) {
+          // Sembunyikan elemen pembungkus iklan agar tata letak halaman tetap rapi
+          const bannerWrap = document.querySelector('.ad-banner-wrap');
+          if (bannerWrap) bannerWrap.style.display = 'none';
+
+          const sidebarAdWrap = document.querySelector('.ad--sidebar');
+          if (sidebarAdWrap) sidebarAdWrap.style.display = 'none';
+
+          if (bannerEl) bannerEl.innerHTML = '';
+          if (sidebarEl) sidebarEl.innerHTML = '';
+          return;
+        }
+      }
 
       const res = await fetch(`${API_BASE}/api/ads`);
       if (!res.ok) return;

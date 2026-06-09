@@ -11,6 +11,21 @@
 </head>
 <body>
 
+  <!-- Splash Screen / Intro Landing -->
+  <div id="splashScreen" class="splash">
+    <div class="splash__content">
+      <div class="splash__logo-wrap">
+        <img src="./logo.png?v=4" alt="Berita Krian Logo" class="splash__logo" />
+        <div class="splash__glow"></div>
+      </div>
+      <h1 class="splash__title">BERITA KRIAN</h1>
+      <p class="splash__subtitle">Portal Berita Terpercaya & Terkini</p>
+      <div class="splash__loader">
+        <div class="splash__bar"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Topbar -->
   <div class="topbar">
     <div class="container topbar__inner">
@@ -42,14 +57,7 @@
   <header class="brand">
     <div class="container brand__inner">
       <a class="brand__logo" href="./index.html" aria-label="Berita Krian - Beranda">
-        <div class="logoMark">BK</div>
-        <div class="logoText">
-          <div style="display:flex;gap:6px;align-items:baseline">
-            <div class="logoText__big">BERITA</div>
-            <div class="logoText__big red">KRIAN</div>
-          </div>
-          <div class="logoText__sub">Portal Berita Krian</div>
-        </div>
+        <img src="./logo.png?v=4" alt="Berita Krian Logo" class="brand__logo-img" />
       </a>
 
       <div class="brand__search" role="search">
@@ -146,8 +154,7 @@
         <!-- Brand -->
         <div class="footer__brand">
           <div class="footer__brand-logo">
-            <div class="footer__brand-mark">BK</div>
-            <div class="footer__brand-name">BERITA <span>KRIAN</span></div>
+            <img src="./logo.png?v=4" alt="Berita Krian Logo" class="footer__logo-img" />
           </div>
           <p class="footer__tagline">Portal berita terpercaya Indonesia. Sajian informasi terkini, akurat, dan berimbang setiap hari.</p>
           <div class="footer__social">
@@ -224,5 +231,23 @@
   <script src="./modals.js"></script>
   <script src="./ads.js"></script>
   <script src="./app.js" defer></script>
+  <script>
+    (function() {
+      document.body.style.overflow = "hidden";
+      document.documentElement.classList.add("splash-active");
+      window.addEventListener("load", function() {
+        setTimeout(function() {
+          const splash = document.getElementById("splashScreen");
+          if (splash) {
+            splash.classList.add("fade-out");
+            document.body.style.overflow = "";
+            document.documentElement.classList.remove("splash-active");
+            document.documentElement.classList.add("splash-done");
+            setTimeout(function() { splash.remove(); }, 600);
+          }
+        }, 2200);
+      });
+    })();
+  </script>
 </body>
 </html>

@@ -219,6 +219,18 @@ button { font-family: inherit; }
   align-items: center;
   gap: 14px;
 }
+.brand__logo-img {
+  height: 90px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+.footer__logo-img {
+  height: 72px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
 .logoMark {
   width: 58px; height: 58px;
   border-radius: 14px;
@@ -757,6 +769,21 @@ button { font-family: inherit; }
   align-items: center;
   margin-top: 16px;
 }
+.shareRow .shareBtn,
+.shareRow .bookmarkBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 50%;
+  flex-shrink: 0;
+  gap: 0;
+}
+.shareRow .shareBtn svg {
+  margin-right: 0 !important;
+}
 .shareBtn {
   display: inline-flex;
   align-items: center;
@@ -1155,17 +1182,17 @@ textarea { min-height: 130px; resize: vertical; }
 .bookmarkBtn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   border: 1px solid var(--line);
   background: #fff;
-  padding: 6px 11px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
+  border-radius: 50%;
   cursor: pointer;
   transition: background .18s, border-color .18s, box-shadow .18s, transform .18s;
   color: var(--text);
-  font-family: var(--sans);
+  padding: 0;
+  flex-shrink: 0;
 }
 .bookmarkBtn:hover { box-shadow: var(--shadow-sm); transform: scale(1.04); }
 .bookmarkBtn.active {
@@ -1173,10 +1200,27 @@ textarea { min-height: 130px; resize: vertical; }
   border-color: #fbbf24;
   color: #92400e;
 }
-.bookmarkBtn.active .bk-icon::before  { content: "🔖"; }
-.bk-icon::before                      { content: "🤍"; }
-.bookmarkBtn.active .bk-text::before  { content: "Tersimpan"; }
-.bk-text::before                      { content: "Simpan"; }
+.bookmarkBtn .bk-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z'/%3E%3C/svg%3E");
+}
+.bookmarkBtn.active .bk-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ea580c' stroke='%23ea580c' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z'/%3E%3C/svg%3E");
+}
+.bookmarkBtn.active .bk-icon::before,
+.bookmarkBtn .bk-icon::before {
+  content: "" !important;
+}
+.bookmarkBtn .bk-text {
+  display: none !important;
+}
 
 .bk-badge {
   display: inline-flex;
@@ -1466,6 +1510,9 @@ textarea { min-height: 130px; resize: vertical; }
     align-items: center;
   }
   .brand__logo { gap: 10px; }
+  .brand__logo-img {
+    height: 56px;
+  }
 
   .logoMark {
     width: 40px;
@@ -2694,7 +2741,12 @@ textarea { min-height: 130px; resize: vertical; }
 }
 
 /* Slot kosong: tidak memakan ruang */
-.ad-slot { display: block; }
+.ad-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
 .ad-slot.ad-slot--empty .ad-placeholder { display: flex; }
 .ad-slot.ad-slot--active .ad-placeholder { display: none; }
 
@@ -2749,3 +2801,145 @@ textarea { min-height: 130px; resize: vertical; }
 @media (max-width: 640px) {
   #adsGrid { grid-template-columns: 1fr !important; }
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   TEMPORARY PLACEHOLDER FOR IMAGES
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.cardNews__img,
+.hero__img,
+.detail__cover {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' fill='none'%3E%3Crect width='400' height='300' fill='%23f1f5f9'/%3E%3Cg transform='translate%28160, 80%29' fill='none' stroke='%23cbd5e1' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='2' width='76' height='76' rx='8' ry='8'/%3E%3Ccircle cx='26' cy='26' r='8'/%3E%3Cpath d='M78 54L54 30 14 70'/%3E%3C/g%3E%3Ctext x='200' y='200' fill='%2394a3b8' font-family='system-ui, -apple-system, sans-serif' font-size='15' font-weight='bold' text-anchor='middle'%3EFOTO BELUM DIUNGGAH%3C/text%3E%3C/svg%3E") !important;
+  background-size: cover !important;
+  background-position: center !important;
+}
+
+.sideThumb {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 80' fill='none'%3E%3Crect width='100' height='80' fill='%23f1f5f9'/%3E%3Cg transform='translate%2830, 20%29' fill='none' stroke='%23cbd5e1' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='2' width='36' height='36' rx='4' ry='4'/%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M38 26L26 14 6 34'/%3E%3C/g%3E%3C/svg%3E") !important;
+  background-size: cover !important;
+  background-position: center !important;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SPLASH SCREEN / LANDING ANIMATION
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.splash {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.7s;
+  overflow: hidden;
+}
+
+.splash.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.splash__content {
+  text-align: center;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 400px;
+  width: 90%;
+}
+
+.splash__logo-wrap {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: splashZoomIn 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.splash__logo {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  z-index: 2;
+  filter: drop-shadow(0 8px 30px rgba(15, 23, 42, 0.08));
+}
+
+.splash__glow {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  background: radial-gradient(circle, rgba(15, 23, 42, 0.04) 0%, transparent 70%);
+  z-index: 1;
+  border-radius: 50%;
+  animation: splashGlow 2.5s ease-in-out infinite alternate;
+}
+
+.splash__title {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin: 16px 0 2px 0;
+  background: linear-gradient(135deg, var(--text) 0%, var(--muted) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: splashFadeInUp 0.8s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+.splash__subtitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.8px;
+  margin: 0;
+  animation: splashFadeInUp 0.8s ease-out 0.5s forwards;
+  opacity: 0;
+}
+
+.splash__loader {
+  width: 180px;
+  height: 4px;
+  background: rgba(15, 23, 42, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 24px;
+  opacity: 0;
+  animation: splashFadeInUp 0.8s ease-out 0.7s forwards;
+}
+
+.splash__bar {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
+  border-radius: 999px;
+  animation: fillProgress 1.5s cubic-bezier(0.4, 0, 0.2, 1) 0.8s forwards;
+}
+
+/* Animations */
+@keyframes splashZoomIn {
+  0% { transform: scale(0.4); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes splashGlow {
+  0% { transform: scale(0.8); opacity: 0.4; }
+  100% { transform: scale(1.25); opacity: 0.7; }
+}
+
+@keyframes splashFadeInUp {
+  0% { transform: translateY(12px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fillProgress {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+

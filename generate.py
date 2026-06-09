@@ -155,11 +155,7 @@ def page_html(all_news, a):
   <header class="brand">
     <div class="container brand__inner">
       <a class="brand__logo" href="../index.html" aria-label="Home">
-        <div class="logoMark">BK</div>
-        <div class="logoText">
-          <div class="logoText__big">BERITA</div>
-          <div class="logoText__big red">KRIAN</div>
-        </div>
+        <img src="../logo.png?v=4" alt="Berita Krian Logo" class="brand__logo-img" />
       </a>
     </div>
   </header>
